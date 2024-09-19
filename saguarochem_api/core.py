@@ -40,7 +40,8 @@ class SaguaroChemAPIWrapper:
         """
         return {"Content-Type": "application/json", "Authorization": self._api_key}
 
-    def _send_post_request(url: str, 
+    def _send_post_request(self, 
+                          url: str, 
                           headers: Dict[str, str], 
                           data: Dict[str, Any], 
                           timeout: int = 120, 
@@ -129,7 +130,7 @@ class SaguaroChemAPIWrapper:
         self._api_key = api_key
         self._headers = self._construct_headers()
 
-    def predict_procedures_retro_template_free(smiles, sampling_method='top_k', seq_length=512, beam_size=5, temperature=1.0):
+    def predict_procedures_retro_template_free(self, smiles, sampling_method='top_k', seq_length=512, beam_size=5, temperature=1.0):
       """
       Predicts retrosynthetic procedures for given SMILES strings using a template-free approach.
   
@@ -158,7 +159,6 @@ class SaguaroChemAPIWrapper:
   
       """
       # Validate input parameters
-      print(smiles)
       if not isinstance(smiles, list) or not all(isinstance(s, str) for s in smiles):
           raise ValueError("The 'smiles' argument must be a list of strings.")
       
