@@ -158,6 +158,7 @@ class SaguaroChemAPIWrapper:
   
       """
       # Validate input parameters
+      print(smiles)
       if not isinstance(smiles, list) or not all(isinstance(s, str) for s in smiles):
           raise ValueError("The 'smiles' argument must be a list of strings.")
       
