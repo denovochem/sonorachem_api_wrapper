@@ -36,9 +36,9 @@ class SaguaroChemAPIWrapper:
 
         Returns:
             dict: dictionary containing the "Content-Type" and the
-                "Authorization".
+                "x-api-key".
         """
-        return {"Content-Type": "application/json", "Authorization": self._api_key}
+        return {"Content-Type": "application/json", "x-api-key": self._api_key}
 
     def _send_post_request(self, 
                           url: str, 
@@ -156,7 +156,6 @@ class SaguaroChemAPIWrapper:
   
       Raises:
           ValueError: If an invalid sampling_method is provided or if temperature is not positive.
-  
       """
       # Validate input parameters
       if not isinstance(smiles, list) or not all(isinstance(s, str) for s in smiles):
@@ -201,7 +200,6 @@ class SaguaroChemAPIWrapper:
                     }
                 }
 
-      print(self._base_url, self._headers, input_data)
       output_data = self._send_post_request(self._base_url, self._headers, input_data)
 
       return output_data
