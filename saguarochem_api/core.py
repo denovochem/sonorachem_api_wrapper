@@ -181,20 +181,27 @@ class SaguaroChemAPIWrapper:
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
 
-      input_data = {
-                    "endpoint": "procedures_retro_template_free",
-                    "data": {
-                            "inference_strategy": "N/A",
-                            "smiles": smiles,
-                            "kwargs": {
-                                      "sampling_method": sampling_method,
-                                      "seq_length": seq_length,
-                                      "beam_size": beam_size,
-                                      "temperature": temperature
-                                      }
-                            }
-                    }
+      # input_data = {
+      #               "endpoint": "procedures_retro_template_free",
+      #               "data": {
+      #                       "inference_strategy": "N/A",
+      #                       "smiles": smiles,
+      #                       "kwargs": {
+      #                                 "sampling_method": sampling_method,
+      #                                 "seq_length": seq_length,
+      #                                 "beam_size": beam_size,
+      #                                 "temperature": temperature
+      #                                 }
+      #                       }
+      #               }
 
+      input_data = {
+                    "input": {
+                        "smiles": smiles[0]
+                    }
+                }
+
+      print(self._base_url, self._headers, input_data)
       output_data = self._send_post_request(self._base_url, self._headers, input_data)
 
       return output_data
