@@ -28,14 +28,14 @@ sonorachem_api = SonoraChemAPIWrapper(api_key)
 sonorachem_api.get_api_usage()
 ```
 
-### Forward reaction prediction
+### Forward reaction prediction:
 
 ```python
 reactants = ['COc1ccccc1C(=O)Cl.Cl[Al](Cl)Cl.O=S(=O)(c1ccccc1)c1ccc(Oc2ccccc2)cc1.ClCCCl.O.[K+].[OH-].O=S(=O)([O-])[O-].[Mg+2]']
 predictions = sonorachem_api.predict_forward_reaction(reactants)
 ```
 
-### Template-free procedure retrosynthesis:
+### Template-free procedure retrosynthesis prediction:
 
 ```python
 smiles = ['CC1=C(C=C(C=C1)C(=O)NC2=CC(=C(C=C2)CN3CCN(CC3)C)C(F)(F)F)C#CC4=CN=C5N4N=CC=C5']
