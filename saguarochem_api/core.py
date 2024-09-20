@@ -11,7 +11,7 @@ class SaguaroChemAPIWrapper:
     def __init__(
         self,
         api_key: str,
-        base_url: Optional[str] = 'https://hwsvflxtqh.execute-api.us-east-2.amazonaws.com/denovochem_api_stage/runpod',
+        base_url: Optional[str] = 'https://hwsvflxtqh.execute-api.us-east-2.amazonaws.com/denovochem_api_stage',
     ):
         """
         SaguaroChemAPIWrapper constructor.
@@ -29,6 +29,8 @@ class SaguaroChemAPIWrapper:
         """
         self._api_key = api_key
         self._base_url = base_url
+        self._runpod_url = self._base_url + '/runpod'
+        self._usage_url = self._base_url + '/get_usage'
         self._headers = self._construct_headers()
 
     def _construct_headers(self) -> dict:
@@ -112,6 +114,8 @@ class SaguaroChemAPIWrapper:
             base_url (str): base url for the service to set.
         """
         self._base_url = base_url
+        self._runpod_url = self._base_url + '/runpod'
+        self._usage_url = self._base_url + '/get_usage'
 
     def set_api_key(self, api_key: str):
         """
@@ -131,7 +135,29 @@ class SaguaroChemAPIWrapper:
         self._api_key = api_key
         self._headers = self._construct_headers()
         
-    # def check_api_usage():
+    def get_api_usage(self):
+        """
+        Retrieves the API usage statistics for the current API key.
+    
+        This function sends a POST request to the API's usage endpoint to fetch the
+        usage statistics associated with the provided API key. The response is then
+        returned as a dictionary.
+    
+        Returns:
+            dict: A dictionary containing the API usage data.
+    
+        Raises:
+            HTTPError: If the request to the API fails.
+            ValueError: If the response from the API is not in the expected format.
+        """
+        # Prepare the input data with the API key
+        input_data = {"api_key": self._api_key}
+    
+        # Send a POST request to the usage URL with the provided headers and input data
+        output_data = self._send_post_request(self._usage_url, self._headers, input_data)
+    
+        # Return the output data containing the API usage statistics
+        return output_data['body']
 
     def predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
@@ -212,7 +238,7 @@ class SaguaroChemAPIWrapper:
                 }
 
       start = time.time()
-      output_data = self._send_post_request(self._base_url, self._headers, input_data)
+      output_data = self._send_post_request(self._runpod_url, self._headers, input_data)
       returned_data = {'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
 
       return returned_data
@@ -290,7 +316,7 @@ class SaguaroChemAPIWrapper:
                     }
 
       start = time.time()
-      output_data = self._send_post_request(self._base_url, self._headers, input_data)
+      output_data = self._send_post_request(self._runpod_url, self._headers, input_data)
       returned_data = {'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
 
       return returned_data
@@ -368,7 +394,7 @@ class SaguaroChemAPIWrapper:
                     }
 
       start = time.time()
-      output_data = self._send_post_request(self._base_url, self._headers, input_data)
+      output_data = self._send_post_request(self._runpod_url, self._headers, input_data)
       returned_data = {'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
 
       return returned_data
@@ -446,7 +472,7 @@ class SaguaroChemAPIWrapper:
                     }
 
       start = time.time()
-      output_data = self._send_post_request(self._base_url, self._headers, input_data)
+      output_data = self._send_post_request(self._runpod_url, self._headers, input_data)
       returned_data = {'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
 
       return returned_data
