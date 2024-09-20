@@ -3,9 +3,9 @@ import json
 import time
 from typing import Dict, Any, Optional
 
-class SaguaroChemAPIWrapper:
+class SonoraChemAPIWrapper:
     """
-    Python wrapper for SaguaroChem API.
+    Python wrapper for SonoraChem API.
     """
 
     def __init__(
@@ -14,7 +14,7 @@ class SaguaroChemAPIWrapper:
         base_url: Optional[str] = 'https://hwsvflxtqh.execute-api.us-east-2.amazonaws.com/denovochem_api_stage',
     ):
         """
-        SaguaroChemAPIWrapper constructor.
+        SonoraChemAPIWrapper constructor.
 
         Args:
             api_key (str): an API key to access the service.
@@ -24,8 +24,8 @@ class SaguaroChemAPIWrapper:
         Examples:
             Initialize the wrapper by simply providing an API key:
 
-            >>> from xxx import SaguaroChemAPIWrapper
-            >>> saguarochem_api_wrapper = SaguaroChemAPIWrapper(api_key=api_key)
+            >>> from xxx import SonoraChemAPIWrapper
+            >>> sonorachem_api_wrapper = SonoraChemAPIWrapper(api_key=api_key)
         """
         self._api_key = api_key
         self._base_url = base_url
@@ -129,7 +129,7 @@ class SaguaroChemAPIWrapper:
         Examples:
             Set an API key:
 
-            >>> saguarochem_api_wrapper.set_api_key('API_KEY')
+            >>> sonorachem_api_wrapper.set_api_key('API_KEY')
         """
         logger.info("Set API key to {}".format(api_key))
         self._api_key = api_key
