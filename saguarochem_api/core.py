@@ -133,7 +133,7 @@ class SaguaroChemAPIWrapper:
         
     # def check_api_usage():
 
-    def predict_procedures_retro_template_free(self, smiles, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
       Predicts retrosynthetic procedures for given SMILES strings using a template-free approach.
   
@@ -142,7 +142,7 @@ class SaguaroChemAPIWrapper:
       control the prediction process.
   
       Args:
-          smiles (list of str): A list of SMILES strings representing chemical compounds.
+          input_data (list of str): A list of SMILES strings representing chemical compounds.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
           seq_length (int, optional): The maximum sequence length for the model input. 
@@ -154,15 +154,23 @@ class SaguaroChemAPIWrapper:
               Defaults to 1.0.
   
       Returns:
-          list of list of str: A list of predicted retrosynthetic procedures for each input SMILES.
-              Each procedure is represented as a list of strings describing synthetic steps.
+          list of dict: or something, fill in later when format is finalized
   
       Raises:
-          ValueError: If an invalid sampling_method is provided or if temperature is not positive.
+          ValueError: 
+            - If `input_data` is not a list of strings.
+            - If `model_version` is not a string.
+            - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
+            - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
+            - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
+            - If `temperature` is not a positive float.
       """
       # Validate input parameters
-      if not isinstance(smiles, list) or not all(isinstance(s, str) for s in smiles):
-          raise ValueError("The 'smiles' argument must be a list of strings.")
+      if not isinstance(input_data, list) or not all(isinstance(s, str) for s in input_data):
+          raise ValueError("The 'input_data' argument must be a list of strings.")
+
+      if not isinstance(model_version, str):
+          raise ValueError("The 'model_version' argument must be a string.")
       
       if sampling_method not in ['top_k', 'greedy', 'sampling']:
           raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
@@ -187,7 +195,7 @@ class SaguaroChemAPIWrapper:
       #               "endpoint": "procedures_retro_template_free",
       #               "data": {
       #                       "model_version": model_version,
-      #                       "smiles": smiles,
+      #                       "input_data": input_data,
       #                       "kwargs": {
       #                                 "sampling_method": sampling_method,
       #                                 "seq_length": seq_length,
@@ -199,7 +207,7 @@ class SaguaroChemAPIWrapper:
 
       input_data = {
                     "input": {
-                        "smiles": smiles[0]
+                        "smiles": input_data[0]
                     }
                 }
 
@@ -209,7 +217,7 @@ class SaguaroChemAPIWrapper:
 
       return returned_data
       
-    def predict_purification_protocols(self, smiles, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
       Predicts purification procedures for given reaction SMILES strings.
   
@@ -218,7 +226,7 @@ class SaguaroChemAPIWrapper:
       parameters to control the prediction process.
   
       Args:
-          smiles (list of str): A list of SMILES strings representing chemical compounds.
+          input_data (list of str): A list of SMILES strings representing chemical compounds.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
           seq_length (int, optional): The maximum sequence length for the model input. 
@@ -230,15 +238,23 @@ class SaguaroChemAPIWrapper:
               Defaults to 1.0.
   
       Returns:
-          list of list of str: A list of predicted retrosynthetic procedures for each input SMILES.
-              Each procedure is represented as a list of strings describing synthetic steps.
+          list of dict: or something, fill in later when format is finalized
   
       Raises:
-          ValueError: If an invalid sampling_method is provided or if temperature is not positive.
+          ValueError: 
+            - If `input_data` is not a list of strings.
+            - If `model_version` is not a string.
+            - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
+            - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
+            - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
+            - If `temperature` is not a positive float.
       """
       # Validate input parameters
-      if not isinstance(smiles, list) or not all(isinstance(s, str) for s in smiles):
-          raise ValueError("The 'smiles' argument must be a list of strings.")
+      if not isinstance(input_data, list) or not all(isinstance(s, str) for s in input_data):
+          raise ValueError("The 'input_data' argument must be a list of strings.")
+
+      if not isinstance(model_version, str):
+          raise ValueError("The 'model_version' argument must be a string.")
       
       if sampling_method not in ['top_k', 'greedy', 'sampling']:
           raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
@@ -263,7 +279,7 @@ class SaguaroChemAPIWrapper:
                     "endpoint": "purification_protocols",
                     "data": {
                             "model_version": model_version,
-                            "smiles": smiles,
+                            "input_data": input_data,
                             "kwargs": {
                                       "sampling_method": sampling_method,
                                       "seq_length": seq_length,
@@ -279,7 +295,7 @@ class SaguaroChemAPIWrapper:
 
       return returned_data
       
-    def predict_forward_reaction(self, smiles, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
       Predicts products given reactants SMILES using a template-free approach.
   
@@ -288,7 +304,7 @@ class SaguaroChemAPIWrapper:
       prediction process.
   
       Args:
-          smiles (list of str): A list of SMILES strings representing chemical compounds.
+          input_data (list of str): A list of SMILES strings representing chemical compounds.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
           seq_length (int, optional): The maximum sequence length for the model input. 
@@ -300,15 +316,23 @@ class SaguaroChemAPIWrapper:
               Defaults to 1.0.
   
       Returns:
-          list of list of str: A list of predicted retrosynthetic procedures for each input SMILES.
-              Each procedure is represented as a list of strings describing synthetic steps.
+          list of dict: or something, fill in later when format is finalized
   
       Raises:
-          ValueError: If an invalid sampling_method is provided or if temperature is not positive.
+          ValueError: 
+            - If `input_data` is not a list of strings.
+            - If `model_version` is not a string.
+            - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
+            - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
+            - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
+            - If `temperature` is not a positive float.
       """
       # Validate input parameters
-      if not isinstance(smiles, list) or not all(isinstance(s, str) for s in smiles):
-          raise ValueError("The 'smiles' argument must be a list of strings.")
+      if not isinstance(input_data, list) or not all(isinstance(s, str) for s in input_data):
+          raise ValueError("The 'input_data' argument must be a list of strings.")
+
+      if not isinstance(model_version, str):
+          raise ValueError("The 'model_version' argument must be a string.")
       
       if sampling_method not in ['top_k', 'greedy', 'sampling']:
           raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
@@ -333,7 +357,7 @@ class SaguaroChemAPIWrapper:
                     "endpoint": "forward_reaction",
                     "data": {
                             "model_version": model_version,
-                            "smiles": smiles,
+                            "input_data": input_data,
                             "kwargs": {
                                       "sampling_method": sampling_method,
                                       "seq_length": seq_length,
@@ -349,7 +373,7 @@ class SaguaroChemAPIWrapper:
 
       return returned_data
       
-    def predict_procedures_given_reactants_products(self, smiles, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
       Predicts retrosynthetic procedures for given reactants and products SMILES strings.
   
@@ -358,7 +382,7 @@ class SaguaroChemAPIWrapper:
       the prediction process.
   
       Args:
-          smiles (list of str): A list of SMILES strings representing chemical compounds.
+          input_data (list of str): A list of SMILES strings representing chemical compounds.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
           seq_length (int, optional): The maximum sequence length for the model input. 
@@ -370,15 +394,23 @@ class SaguaroChemAPIWrapper:
               Defaults to 1.0.
   
       Returns:
-          list of list of str: A list of predicted retrosynthetic procedures for each input SMILES.
-              Each procedure is represented as a list of strings describing synthetic steps.
+          list of dict: or something, fill in later when format is finalized
   
       Raises:
-          ValueError: If an invalid sampling_method is provided or if temperature is not positive.
+          ValueError: 
+            - If `input_data` is not a list of strings.
+            - If `model_version` is not a string.
+            - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
+            - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
+            - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
+            - If `temperature` is not a positive float.
       """
       # Validate input parameters
-      if not isinstance(smiles, list) or not all(isinstance(s, str) for s in smiles):
-          raise ValueError("The 'smiles' argument must be a list of strings.")
+      if not isinstance(input_data, list) or not all(isinstance(s, str) for s in input_data):
+          raise ValueError("The 'input_data' argument must be a list of strings.")
+
+      if not isinstance(model_version, str):
+          raise ValueError("The 'model_version' argument must be a string.")
       
       if sampling_method not in ['top_k', 'greedy', 'sampling']:
           raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
@@ -403,7 +435,7 @@ class SaguaroChemAPIWrapper:
                     "endpoint": "procedures_given_reactants_products",
                     "data": {
                             "model_version": model_version,
-                            "smiles": smiles,
+                            "input_data": input_data,
                             "kwargs": {
                                       "sampling_method": sampling_method,
                                       "seq_length": seq_length,
