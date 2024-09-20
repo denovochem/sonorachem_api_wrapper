@@ -133,7 +133,7 @@ class SaguaroChemAPIWrapper:
         
     # def check_api_usage():
 
-    def predict_procedures_retro_template_free(self, smiles, sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def predict_procedures_retro_template_free(self, smiles, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
       Predicts retrosynthetic procedures for given SMILES strings using a template-free approach.
   
@@ -186,7 +186,7 @@ class SaguaroChemAPIWrapper:
       # input_data = {
       #               "endpoint": "procedures_retro_template_free",
       #               "data": {
-      #                       "inference_strategy": "N/A",
+      #                       "model_version": model_version,
       #                       "smiles": smiles,
       #                       "kwargs": {
       #                                 "sampling_method": sampling_method,
@@ -209,7 +209,7 @@ class SaguaroChemAPIWrapper:
 
       return returned_data
       
-    def predict_purification_protocols(self, smiles, sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def predict_purification_protocols(self, smiles, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
       Predicts purification procedures for given reaction SMILES strings.
   
@@ -262,7 +262,7 @@ class SaguaroChemAPIWrapper:
       input_data = {
                     "endpoint": "purification_protocols",
                     "data": {
-                            "inference_strategy": "N/A",
+                            "model_version": model_version,
                             "smiles": smiles,
                             "kwargs": {
                                       "sampling_method": sampling_method,
@@ -279,7 +279,7 @@ class SaguaroChemAPIWrapper:
 
       return returned_data
       
-    def predict_forward_reaction(self, smiles, sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def predict_forward_reaction(self, smiles, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
       Predicts products given reactants SMILES using a template-free approach.
   
@@ -332,7 +332,7 @@ class SaguaroChemAPIWrapper:
       input_data = {
                     "endpoint": "forward_reaction",
                     "data": {
-                            "inference_strategy": "N/A",
+                            "model_version": model_version,
                             "smiles": smiles,
                             "kwargs": {
                                       "sampling_method": sampling_method,
@@ -349,7 +349,7 @@ class SaguaroChemAPIWrapper:
 
       return returned_data
       
-    def predict_procedures_given_reactants_products(self, smiles, sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def predict_procedures_given_reactants_products(self, smiles, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
       Predicts retrosynthetic procedures for given reactants and products SMILES strings.
   
@@ -402,7 +402,7 @@ class SaguaroChemAPIWrapper:
       input_data = {
                     "endpoint": "procedures_given_reactants_products",
                     "data": {
-                            "inference_strategy": "N/A",
+                            "model_version": model_version,
                             "smiles": smiles,
                             "kwargs": {
                                       "sampling_method": sampling_method,
