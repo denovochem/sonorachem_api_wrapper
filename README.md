@@ -14,7 +14,7 @@ pip install git+https://github.com/denovochem/sonorachem_api_wrapper.git
 
 ## Usage
 
-### Load SaguaroChemAPIWrapper and set an API key:
+### Load SonoraChemAPIWrapper and set an API key:
 
 ```python
 api_key = 'API_KEY'
