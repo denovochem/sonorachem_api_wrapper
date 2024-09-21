@@ -1,12 +1,13 @@
 from setuptools import setup, find_packages
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 setup(
     name='sonorachem_api',
     version='0.0.1',
     packages=find_packages(),
-    install_requires=[
-        'requests<3.0.0,>=2.23.0',
-    ],
+    install_requires=requirements,
     author='De Novo Chem Team',
     author_email='carson.britt@denovochem.com',
     description='Wrapper to access the SonoraChem API',
