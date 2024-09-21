@@ -304,7 +304,7 @@ class SonoraChemAPIWrapper:
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
           
-      invalid_smiles = [smiles for smiles in input_data if not is_valid_smiles(smiles)]
+      invalid_smiles = [smiles for smiles in input_data if not self.is_valid_smiles(smiles)]
       if invalid_smiles:
             raise ValueError(f"The following SMILES strings are invalid: {invalid_smiles}")
 
@@ -393,7 +393,7 @@ class SonoraChemAPIWrapper:
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
 
-      invalid_reactions = [reaction for reaction in input_data if not is_valid_reaction_smiles(reaction)]
+      invalid_reactions = [reaction for reaction in input_data if not self.is_valid_reaction_smiles(reaction)]
       if invalid_reactions:
             raise ValueError(f"The following reaction SMILES strings are invalid: {invalid_reactions}")
 
@@ -476,7 +476,7 @@ class SonoraChemAPIWrapper:
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
 
-      invalid_smiles = [smiles for smiles in input_data if not is_valid_smiles(smiles)]
+      invalid_smiles = [smiles for smiles in input_data if not self.is_valid_smiles(smiles)]
       if invalid_smiles:
             raise ValueError(f"The following SMILES strings are invalid: {invalid_smiles}")
 
@@ -559,7 +559,7 @@ class SonoraChemAPIWrapper:
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
 
-      invalid_reactions = [reaction for reaction in input_data if not is_valid_reaction_smiles(reaction)]
+      invalid_reactions = [reaction for reaction in input_data if not self.is_valid_reaction_smiles(reaction)]
       if invalid_reactions:
             raise ValueError(f"The following reaction SMILES strings are invalid: {invalid_reactions}")
 
