@@ -2,6 +2,8 @@ import requests
 import json
 import time
 from typing import Dict, Any, Optional
+from rdkit import Chem
+from rdkit.Chem import AllChem
 
 class SonoraChemAPIWrapper:
     """
@@ -24,7 +26,7 @@ class SonoraChemAPIWrapper:
         Examples:
             Initialize the wrapper by simply providing an API key:
 
-            >>> from xxx import SonoraChemAPIWrapper
+            >>> from sonorachem_api import SonoraChemAPIWrapper
             >>> sonorachem_api_wrapper = SonoraChemAPIWrapper(api_key=api_key)
         """
         self._api_key = api_key
@@ -159,6 +161,90 @@ class SonoraChemAPIWrapper:
         # Return the output data containing the API usage statistics
         return output_data['body']
 
+    def is_valid_smiles(self, smiles):
+        """
+        Sanitizes and checks if the input is a valid SMILES string, potentially with one or more fragments.
+        Removes atom mapping and isotopes if present and issues a warning.
+    
+        Parameters:
+        smiles (str): The SMILES string to be checked.
+    
+        Returns:
+        bool: True if the SMILES string is valid, False otherwise.
+        """
+        try:
+            # Parse the SMILES string
+            mol = Chem.MolFromSmiles(smiles)
+            
+            # Check if the molecule is valid
+            if mol is None:
+                return False
+            
+            # Check for atom mapping and remove if present
+            if any(atom.GetAtomMapNum() != 0 for atom in mol.GetAtoms()):
+                print("Warning: Atom mapping found and removed.")
+                for atom in mol.GetAtoms():
+                    atom.SetAtomMapNum(0)
+            
+            # Check for isotopes and remove if present
+            if any(atom.GetIsotope() != 0 for atom in mol.GetAtoms()):
+                print("Warning: Isotopes found and removed.")
+                for atom in mol.GetAtoms():
+                    atom.SetIsotope(0)
+            
+            # Sanitize the molecule
+            Chem.SanitizeMol(mol)
+            
+            return True
+        except Exception as e:
+            print(f"Error: {e}")
+            return False
+
+    def is_valid_reaction_smiles(self, reaction_smiles):
+        """
+        Sanitizes and checks if the input is a valid reaction SMILES.
+        Removes atom mapping and isotopes if present and issues a warning.
+    
+        Parameters:
+        reaction_smiles (str): The reaction SMILES string to be checked.
+    
+        Returns:
+        bool: True if the reaction SMILES is valid, False otherwise.
+        """
+        try:
+            # Parse the reaction SMILES
+            reaction = AllChem.ReactionFromSmarts(reaction_smiles)
+            
+            # Check if the reaction is valid
+            if reaction is None:
+                return False
+            
+            # Check for atom mapping and remove if present
+            for mol in reaction.GetReactants() + reaction.GetProducts():
+                if any(atom.GetAtomMapNum() != 0 for atom in mol.GetAtoms()):
+                    print("Warning: Atom mapping found and removed.")
+                    for atom in mol.GetAtoms():
+                        atom.SetAtomMapNum(0)
+            
+            # Check for isotopes and remove if present
+            for mol in reaction.GetReactants() + reaction.GetProducts():
+                if any(atom.GetIsotope() != 0 for atom in mol.GetAtoms()):
+                    print("Warning: Isotopes found and removed.")
+                    for atom in mol.GetAtoms():
+                        atom.SetIsotope(0)
+            
+            # Sanitize the reaction
+            Chem.SanitizeRxn(reaction)
+            
+            # Check if the reaction can be performed
+            if reaction.Validate()[1] != 0:
+                return False
+            
+            return True
+        except Exception as e:
+            print(f"Error: {e}")
+            return False
+
     def predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
       Predicts retrosynthetic procedures for given SMILES strings using a template-free approach.
@@ -168,7 +254,8 @@ class SonoraChemAPIWrapper:
       control the prediction process.
   
       Args:
-          input_data (list of str): A list of SMILES strings representing chemical compounds.
+          input_data (list of str): A list of SMILES strings.
+          model_version (str, optional): The version of the model to use. Defaults to 'latest'.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
           seq_length (int, optional): The maximum sequence length for the model input. 
@@ -216,6 +303,10 @@ class SonoraChemAPIWrapper:
       
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
+          
+      invalid_smiles = [smiles for smiles in input_data if not is_valid_smiles(smiles)]
+      if invalid_smiles:
+            raise ValueError(f"The following SMILES strings are invalid: {invalid_smiles}")
 
       # input_data = {
       #               "endpoint": "procedures_retro_template_free",
@@ -252,7 +343,8 @@ class SonoraChemAPIWrapper:
       parameters to control the prediction process.
   
       Args:
-          input_data (list of str): A list of SMILES strings representing chemical compounds.
+          input_data (list of str): A list of reaction SMILES strings.
+          model_version (str, optional): The version of the model to use. Defaults to 'latest'.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
           seq_length (int, optional): The maximum sequence length for the model input. 
@@ -300,6 +392,10 @@ class SonoraChemAPIWrapper:
       
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
+
+      invalid_reactions = [reaction for reaction in input_data if not is_valid_reaction_smiles(reaction)]
+      if invalid_reactions:
+            raise ValueError(f"The following reaction SMILES strings are invalid: {invalid_reactions}")
 
       input_data = {
                     "endpoint": "purification_protocols",
@@ -325,12 +421,13 @@ class SonoraChemAPIWrapper:
       """
       Predicts products given reactants SMILES using a template-free approach.
   
-      This function takes a list of SMILES strings and predicts potential products
+      This function takes a list of reactant SMILES strings and predicts potential products
       The function allows for different sampling methods and parameters to control the 
       prediction process.
   
       Args:
-          input_data (list of str): A list of SMILES strings representing chemical compounds.
+          input_data (list of str): A list of reactant SMILES strings.
+          model_version (str, optional): The version of the model to use. Defaults to 'latest'.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
           seq_length (int, optional): The maximum sequence length for the model input. 
@@ -378,6 +475,10 @@ class SonoraChemAPIWrapper:
       
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
+
+      invalid_smiles = [smiles for smiles in input_data if not is_valid_smiles(smiles)]
+      if invalid_smiles:
+            raise ValueError(f"The following SMILES strings are invalid: {invalid_smiles}")
 
       input_data = {
                     "endpoint": "forward_reaction",
@@ -403,12 +504,13 @@ class SonoraChemAPIWrapper:
       """
       Predicts retrosynthetic procedures for given reactants and products SMILES strings.
   
-      This function takes a list of reactants and products SMILES strings and predicts potential
-      procedures. The function allows for different sampling methods and parameters to control 
+      This function takes a list of reaction SMILES strings with reactants and products and predicts 
+      potential procedures. The function allows for different sampling methods and parameters to control 
       the prediction process.
   
       Args:
-          input_data (list of str): A list of SMILES strings representing chemical compounds.
+          input_data (list of str): A list of reaction SMILES strings.
+          model_version (str, optional): The version of the model to use. Defaults to 'latest'.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
           seq_length (int, optional): The maximum sequence length for the model input. 
@@ -456,6 +558,10 @@ class SonoraChemAPIWrapper:
       
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
+
+      invalid_reactions = [reaction for reaction in input_data if not is_valid_reaction_smiles(reaction)]
+      if invalid_reactions:
+            raise ValueError(f"The following reaction SMILES strings are invalid: {invalid_reactions}")
 
       input_data = {
                     "endpoint": "procedures_given_reactants_products",
