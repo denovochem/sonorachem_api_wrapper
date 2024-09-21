@@ -309,29 +309,23 @@ class SonoraChemAPIWrapper:
       if not valid_smiles:
             raise ValueError("The 'input_data' argument is not a valid SMILES string.")
 
-      # input_data = {
-      #               "endpoint": "procedures_retro_template_free",
-      #               "data": {
-      #                       "model_version": model_version,
-      #                       "input_data": input_data,
-      #                       "kwargs": {
-      #                                 "sampling_method": sampling_method,
-      #                                 "seq_length": seq_length,
-      #                                 "beam_size": beam_size,
-      #                                 "temperature": temperature
-      #                                 }
-      #                       }
-      #               }
-
-      input_data = {
-                    "input": {
-                        "smiles": input_data
+      post_request_data = {
+                    "endpoint": "procedures_retro_template_free",
+                    "data": {
+                            "model_version": model_version,
+                            "input_data": input_data,
+                            "kwargs": {
+                                      "sampling_method": sampling_method,
+                                      "seq_length": seq_length,
+                                      "beam_size": beam_size,
+                                      "temperature": temperature
+                                      }
+                            }
                     }
-                }
 
       start = time.time()
-      output_data = self._send_post_request(self._runpod_url, self._headers, input_data)
-      returned_data = {'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
+      output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+      returned_data = {'input': post_request_data, 'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
 
       return returned_data
       
@@ -398,7 +392,7 @@ class SonoraChemAPIWrapper:
       if not valid_reaction:
             raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
 
-      input_data = {
+      post_request_data = {
                     "endpoint": "purification_protocols",
                     "data": {
                             "model_version": model_version,
@@ -413,8 +407,8 @@ class SonoraChemAPIWrapper:
                     }
 
       start = time.time()
-      output_data = self._send_post_request(self._runpod_url, self._headers, input_data)
-      returned_data = {'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
+      output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+      returned_data = {'input': post_request_data, 'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
 
       return returned_data
       
@@ -481,7 +475,7 @@ class SonoraChemAPIWrapper:
       if not valid_smiles:
             raise ValueError("The 'input_data' argument is not a valid SMILES string.")
 
-      input_data = {
+      post_request_data = {
                     "endpoint": "forward_reaction",
                     "data": {
                             "model_version": model_version,
@@ -496,8 +490,8 @@ class SonoraChemAPIWrapper:
                     }
 
       start = time.time()
-      output_data = self._send_post_request(self._runpod_url, self._headers, input_data)
-      returned_data = {'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
+      output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+      returned_data = {'input': post_request_data, 'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
 
       return returned_data
       
@@ -563,7 +557,7 @@ class SonoraChemAPIWrapper:
       if not valid_reaction:
             raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
 
-      input_data = {
+      post_request_data = {
                     "endpoint": "procedures_given_reactants_products",
                     "data": {
                             "model_version": model_version,
@@ -578,7 +572,7 @@ class SonoraChemAPIWrapper:
                     }
 
       start = time.time()
-      output_data = self._send_post_request(self._runpod_url, self._headers, input_data)
-      returned_data = {'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
-
+      output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+      returned_data = {'input': post_request_data, 'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
+        
       return returned_data
