@@ -247,14 +247,14 @@ class SonoraChemAPIWrapper:
 
     def predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
-      Predicts retrosynthetic procedures for given SMILES strings using a template-free approach.
+      Predicts retrosynthetic procedures for a given SMILES string using a template-free approach.
   
-      This function takes a list of SMILES strings and predicts potential retrosynthetic
+      This function takes a SMILES string and predicts potential retrosynthetic
       procedures. The function allows for different sampling methods and parameters to 
       control the prediction process.
   
       Args:
-          input_data (list of str): A list of SMILES strings.
+          input_data (str): A SMILES string.
           model_version (str, optional): The version of the model to use. Defaults to 'latest'.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
@@ -271,16 +271,17 @@ class SonoraChemAPIWrapper:
   
       Raises:
           ValueError: 
-            - If `input_data` is not a list of strings.
+            - If `input_data` is not a string.
             - If `model_version` is not a string.
             - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
             - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
             - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
             - If `temperature` is not a positive float.
+            - if `input_data` is not a valid SMILES string.
       """
       # Validate input parameters
-      if not isinstance(input_data, list) or not all(isinstance(s, str) for s in input_data):
-          raise ValueError("The 'input_data' argument must be a list of strings.")
+      if not isinstance(input_data, str):
+          raise ValueError("The 'input_data' argument must be a string.")
 
       if not isinstance(model_version, str):
           raise ValueError("The 'model_version' argument must be a string.")
@@ -304,9 +305,9 @@ class SonoraChemAPIWrapper:
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
           
-      invalid_smiles = [smiles for smiles in input_data if not self.is_valid_smiles(smiles)]
-      if invalid_smiles:
-            raise ValueError(f"The following SMILES strings are invalid: {invalid_smiles}")
+      valid_smiles = self.is_valid_smiles(input_data)
+      if not valid_smiles:
+            raise ValueError("The 'input_data' argument is not a valid SMILES string.")
 
       # input_data = {
       #               "endpoint": "procedures_retro_template_free",
@@ -324,7 +325,7 @@ class SonoraChemAPIWrapper:
 
       input_data = {
                     "input": {
-                        "smiles": input_data[0]
+                        "smiles": input_data
                     }
                 }
 
@@ -336,14 +337,14 @@ class SonoraChemAPIWrapper:
       
     def predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
-      Predicts purification procedures for given reaction SMILES strings.
+      Predicts purification procedures for given reaction SMILES string.
   
-      This function takes a list of reaction SMILES strings and predicts potential 
-      purification procedures. The function allows for different sampling methods and 
-      parameters to control the prediction process.
+      This function takes a reaction SMILES string and predicts potential purification 
+      procedures. The function allows for different sampling methods and parameters to 
+      control the prediction process.
   
       Args:
-          input_data (list of str): A list of reaction SMILES strings.
+          input_data (str): A reaction SMILES string.
           model_version (str, optional): The version of the model to use. Defaults to 'latest'.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
@@ -360,7 +361,7 @@ class SonoraChemAPIWrapper:
   
       Raises:
           ValueError: 
-            - If `input_data` is not a list of strings.
+            - If `input_data` is not a string.
             - If `model_version` is not a string.
             - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
             - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
@@ -368,8 +369,8 @@ class SonoraChemAPIWrapper:
             - If `temperature` is not a positive float.
       """
       # Validate input parameters
-      if not isinstance(input_data, list) or not all(isinstance(s, str) for s in input_data):
-          raise ValueError("The 'input_data' argument must be a list of strings.")
+      if not isinstance(input_data, str):
+          raise ValueError("The 'input_data' argument must be a string.")
 
       if not isinstance(model_version, str):
           raise ValueError("The 'model_version' argument must be a string.")
@@ -393,9 +394,9 @@ class SonoraChemAPIWrapper:
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
 
-      invalid_reactions = [reaction for reaction in input_data if not self.is_valid_reaction_smiles(reaction)]
-      if invalid_reactions:
-            raise ValueError(f"The following reaction SMILES strings are invalid: {invalid_reactions}")
+      valid_reaction = self.is_valid_reaction_smiles(input_data)
+      if not valid_reaction:
+            raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
 
       input_data = {
                     "endpoint": "purification_protocols",
@@ -419,14 +420,14 @@ class SonoraChemAPIWrapper:
       
     def predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
-      Predicts products given reactants SMILES using a template-free approach.
+      Predicts a product given reactant SMILES using a template-free approach.
   
-      This function takes a list of reactant SMILES strings and predicts potential products
+      This function takes a reactant SMILES strings and predicts potential products
       The function allows for different sampling methods and parameters to control the 
       prediction process.
   
       Args:
-          input_data (list of str): A list of reactant SMILES strings.
+          input_data (str): Reactant SMILES strings.
           model_version (str, optional): The version of the model to use. Defaults to 'latest'.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
@@ -443,7 +444,7 @@ class SonoraChemAPIWrapper:
   
       Raises:
           ValueError: 
-            - If `input_data` is not a list of strings.
+            - If `input_data` is not a string.
             - If `model_version` is not a string.
             - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
             - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
@@ -451,8 +452,8 @@ class SonoraChemAPIWrapper:
             - If `temperature` is not a positive float.
       """
       # Validate input parameters
-      if not isinstance(input_data, list) or not all(isinstance(s, str) for s in input_data):
-          raise ValueError("The 'input_data' argument must be a list of strings.")
+      if not isinstance(input_data, str):
+          raise ValueError("The 'input_data' argument must be a string.")
 
       if not isinstance(model_version, str):
           raise ValueError("The 'model_version' argument must be a string.")
@@ -476,9 +477,9 @@ class SonoraChemAPIWrapper:
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
 
-      invalid_smiles = [smiles for smiles in input_data if not self.is_valid_smiles(smiles)]
-      if invalid_smiles:
-            raise ValueError(f"The following SMILES strings are invalid: {invalid_smiles}")
+      valid_smiles = self.is_valid_smiles(input_data)
+      if not valid_smiles:
+            raise ValueError("The 'input_data' argument is not a valid SMILES string.")
 
       input_data = {
                     "endpoint": "forward_reaction",
@@ -502,14 +503,13 @@ class SonoraChemAPIWrapper:
       
     def predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
       """
-      Predicts retrosynthetic procedures for given reactants and products SMILES strings.
+      Predicts retrosynthetic procedures for given reactants and products SMILES string.
   
-      This function takes a list of reaction SMILES strings with reactants and products and predicts 
-      potential procedures. The function allows for different sampling methods and parameters to control 
-      the prediction process.
+      This function takes a reaction SMILES string with reactants and products and predicts potential procedures.
+      The function allows for different sampling methods and parameters to control the prediction process.
   
       Args:
-          input_data (list of str): A list of reaction SMILES strings.
+          input_data (str): A reaction SMILES string.
           model_version (str, optional): The version of the model to use. Defaults to 'latest'.
           sampling_method (str, optional): The method used for sampling predictions. 
               Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
@@ -526,7 +526,7 @@ class SonoraChemAPIWrapper:
   
       Raises:
           ValueError: 
-            - If `input_data` is not a list of strings.
+            - If `input_data` is not a string.
             - If `model_version` is not a string.
             - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
             - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
@@ -534,8 +534,8 @@ class SonoraChemAPIWrapper:
             - If `temperature` is not a positive float.
       """
       # Validate input parameters
-      if not isinstance(input_data, list) or not all(isinstance(s, str) for s in input_data):
-          raise ValueError("The 'input_data' argument must be a list of strings.")
+      if not isinstance(input_data, str):
+          raise ValueError("The 'input_data' argument must be a string.")
 
       if not isinstance(model_version, str):
           raise ValueError("The 'model_version' argument must be a string.")
@@ -559,9 +559,9 @@ class SonoraChemAPIWrapper:
       if temperature <= 0:
           raise ValueError("Temperature must be a positive float.")
 
-      invalid_reactions = [reaction for reaction in input_data if not self.is_valid_reaction_smiles(reaction)]
-      if invalid_reactions:
-            raise ValueError(f"The following reaction SMILES strings are invalid: {invalid_reactions}")
+      invalid_reaction = self.is_valid_reaction_smiles(input_data)
+      if not valid_reaction:
+            raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
 
       input_data = {
                     "endpoint": "procedures_given_reactants_products",
