@@ -245,334 +245,249 @@ class SonoraChemAPIWrapper:
             print(f"Error: {e}")
             return False
 
+    def _predict(self, endpoint, input_data, input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+        """
+        Parent function to make a prediction.
+
+        Args:
+            endpoint (str): The endpoint to use for the prediction.
+            input_data (str): input data.
+            input_data_type (str, optional): The input data type used for input validation. 
+                Must be one of 'smiles' or 'rxn_smiles'. Defaults to 'smiles'.
+            model_version (str, optional): The version of the model to use. Defaults to 'latest'.
+            sampling_method (str, optional): The method used for sampling predictions. 
+                Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'greedy'.
+            seq_length (int, optional): The maximum sequence length for the model input. 
+                Defaults to 512.
+            beam_size (int, optional): The beam size for beam search (if applicable). 
+                Defaults to 5.
+            temperature (float, optional): The temperature parameter for controlling randomness 
+                in sampling. Must be a positive float. Higher values increase randomness. 
+                Defaults to 1.0.
+
+        Returns:
+            dict: A dictionary containing the input, output, status, and execution time.
+
+        Raises:
+            ValueError: 
+              - If `input_data` is not a string.
+              - If `model_version` is not a string.
+              - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
+              - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
+              - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
+              - If `temperature` is not a positive float.
+              - if `input_data` is not a valid SMILES string.
+        """
+        if not isinstance(input_data, str):
+            raise ValueError("The 'input_data' argument must be a string.")
+            
+        if input_data_type not in ['smiles', 'rxn_smiles']:
+            raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
+
+        if not isinstance(model_version, str):
+            raise ValueError("The 'model_version' argument must be a string.")
+        
+        if sampling_method not in ['top_k', 'greedy', 'sampling']:
+            raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
+
+        if not isinstance(seq_length, int):
+            raise ValueError("seq_length must be an integer.")
+        if seq_length <= 0 or seq_length > 512:
+            raise ValueError("seq_length must be greater than 0 and less than or equal to 512.")
+    
+        if not isinstance(beam_size, int):
+            raise ValueError("beam_size must be an integer.")
+        if beam_size <= 0 or beam_size > 16:
+            raise ValueError("beam_size must be greater than 0 and less than or equal to 16.")
+        
+        if beam_size == 1:
+            sampling_method = 'greedy'
+        
+        if temperature <= 0:
+            raise ValueError("Temperature must be a positive float.")
+
+        if input_data_type == 'smiles':
+            valid_smiles = self.is_valid_smiles(input_data)
+            if not valid_smiles:
+                raise ValueError("The 'input_data' argument is not a valid SMILES string.")
+                
+        if input_data_type == 'rxn_smiles':
+            valid_rxn_smiles = self.is_valid_reaction_smiles(input_data)
+            if not valid_rxn_smiles:
+                raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
+
+        post_request_data = {
+            "endpoint": endpoint,
+            "data": {
+                "model_version": model_version,
+                "input_data": input_data,
+                "kwargs": {
+                    "sampling_method": sampling_method,
+                    "seq_length": seq_length,
+                    "beam_size": beam_size,
+                    "temperature": temperature
+                }
+            }
+        }
+
+        start = time.time()
+        output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+        returned_data = {
+            'input': post_request_data,
+            'output': output_data['output'],
+            'status': output_data['status'],
+            'execution_time': time.time() - start
+        }
+    
+        return returned_data
+
+    def _batch_predict(self, endpoint, input_data, input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+        """
+        Parent function to make batch predictions.
+
+        Args:
+            endpoint (str): The endpoint to use for the prediction.
+            input_data (list of str): A list of SMILES strings.
+            input_data_type (str, optional): The input data type used for input validation. 
+                Must be one of 'smiles' or 'rxn_smiles'. Defaults to 'smiles'.
+            model_version (str, optional): The version of the model to use. Defaults to 'latest'.
+            sampling_method (str, optional): The method used for sampling predictions. 
+                Must be one of 'greedy', or 'sampling'. Defaults to 'greedy'.
+            seq_length (int, optional): The maximum sequence length for the model input. 
+                Defaults to 512.
+            beam_size (int, optional): The beam size for beam search (if applicable). 
+                Defaults to 5.
+            temperature (float, optional): The temperature parameter for controlling randomness 
+                in sampling. Must be a positive float. Higher values increase randomness. 
+                Defaults to 1.0.
+
+        Returns:
+            dict: A dictionary containing the input, output, status, and execution time.
+
+        Raises:
+            ValueError: 
+              - If `input_data` is not a list of strings.
+              - If `model_version` is not a string.
+              - If `sampling_method` is not one of 'greedy', or 'sampling'.
+              - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
+              - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
+              - If `temperature` is not a positive float.
+              - If any element in `input_data` is not a valid SMILES string.
+        """
+        if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
+            raise ValueError("The 'input_data' argument must be a list of strings.")
+
+        if input_data_type not in ['smiles', 'rxn_smiles']:
+            raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
+
+        if not isinstance(model_version, str):
+            raise ValueError("The 'model_version' argument must be a string.")
+
+        if sampling_method not in ['greedy', 'sampling']:
+            raise ValueError("Invalid sampling method. Must be 'greedy', or 'sampling'.")
+
+        if not isinstance(seq_length, int):
+            raise ValueError("seq_length must be an integer.")
+        if seq_length <= 0 or seq_length > 512:
+            raise ValueError("seq_length must be greater than 0 and less than or equal to 512.")
+
+        if not isinstance(beam_size, int):
+            raise ValueError("beam_size must be an integer.")
+        if beam_size <= 0 or beam_size > 16:
+            raise ValueError("beam_size must be greater than 0 and less than or equal to 16.")
+
+        if beam_size == 1:
+            sampling_method = 'greedy'
+
+        if temperature <= 0:
+            raise ValueError("Temperature must be a positive float.")
+
+        for smiles in input_data:
+            valid_smiles = self.is_valid_smiles(smiles)
+            if not valid_smiles:
+                raise ValueError(f"The SMILES string '{smiles}' is not valid.")
+
+        if input_data_type == 'smiles':
+            for smiles in input_data:
+                valid_smiles = self.is_valid_smiles(smiles)
+                if not valid_smiles:
+                    raise ValueError(f"The SMILES string '{smiles}' is not valid.")
+                
+        if input_data_type == 'rxn_smiles':
+            for rxn_smiles in input_data:
+                valid_rxn_smiles = self.is_valid_reaction_smiles(rxn_smiles)
+                if not valid_rxn_smiles:
+                    raise ValueError(f"The reaction SMILES string '{smiles}' is not valid.")
+
+        post_request_data = {
+            "endpoint": endpoint,
+            "data": {
+                "model_version": model_version,
+                "input_data": input_data,
+                "kwargs": {
+                    "sampling_method": sampling_method,
+                    "seq_length": seq_length,
+                    "beam_size": beam_size,
+                    "temperature": temperature
+                }
+            }
+        }
+
+        start = time.time()
+        output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+        returned_data = {
+            'input': post_request_data,
+            'output': output_data['output'],
+            'status': output_data['status'],
+            'execution_time': time.time() - start
+        }
+    
+        return returned_data
+
     def predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
-      """
-      Predicts retrosynthetic procedures for a given SMILES string using a template-free approach.
-  
-      This function takes a SMILES string and predicts potential retrosynthetic
-      procedures. The function allows for different sampling methods and parameters to 
-      control the prediction process.
-  
-      Args:
-          input_data (str): A SMILES string.
-          model_version (str, optional): The version of the model to use. Defaults to 'latest'.
-          sampling_method (str, optional): The method used for sampling predictions. 
-              Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
-          seq_length (int, optional): The maximum sequence length for the model input. 
-              Defaults to 512.
-          beam_size (int, optional): The beam size for beam search (if applicable). 
-              Defaults to 5.
-          temperature (float, optional): The temperature parameter for controlling randomness 
-              in sampling. Must be a positive float. Higher values increase randomness. 
-              Defaults to 1.0.
-  
-      Returns:
-          list of dict: or something, fill in later when format is finalized
-  
-      Raises:
-          ValueError: 
-            - If `input_data` is not a string.
-            - If `model_version` is not a string.
-            - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
-            - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
-            - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
-            - If `temperature` is not a positive float.
-            - if `input_data` is not a valid SMILES string.
-      """
-      # Validate input parameters
-      if not isinstance(input_data, str):
-          raise ValueError("The 'input_data' argument must be a string.")
+        """
+        Child function to predict retrosynthetic procedures for a given SMILES string using a template-free approach.
+        """
+        return self._predict("procedures_retro_template_free", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-      if not isinstance(model_version, str):
-          raise ValueError("The 'model_version' argument must be a string.")
-      
-      if sampling_method not in ['top_k', 'greedy', 'sampling']:
-          raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
+    def batch_predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+        """
+        Child function to batch predict retrosynthetic procedures for SMILES strings using a template-free approach.
+        """
+        return self._batch_predict("procedures_retro_template_free", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-      if not isinstance(seq_length, int):
-          raise ValueError("seq_length must be an integer.")
-      if seq_length <= 0 or seq_length > 512:
-          raise ValueError("seq_length must be greater than 0 and less than or equal to 512.")
-  
-      if not isinstance(beam_size, int):
-          raise ValueError("beam_size must be an integer.")
-      if beam_size <= 0 or beam_size > 16:
-          raise ValueError("beam_size must be greater than 0 and less than or equal to 16.")
-        
-      if beam_size == 1:
-          sampling_method = 'greedy'
-      
-      if temperature <= 0:
-          raise ValueError("Temperature must be a positive float.")
-          
-      valid_smiles = self.is_valid_smiles(input_data)
-      if not valid_smiles:
-            raise ValueError("The 'input_data' argument is not a valid SMILES string.")
-
-      post_request_data = {
-                    "endpoint": "procedures_retro_template_free",
-                    "data": {
-                            "model_version": model_version,
-                            "input_data": input_data,
-                            "kwargs": {
-                                      "sampling_method": sampling_method,
-                                      "seq_length": seq_length,
-                                      "beam_size": beam_size,
-                                      "temperature": temperature
-                                      }
-                            }
-                    }
-
-      start = time.time()
-      output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
-      returned_data = {'input': post_request_data, 'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
-
-      return returned_data
-      
     def predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
-      """
-      Predicts purification procedures for given reaction SMILES string.
-  
-      This function takes a reaction SMILES string and predicts potential purification 
-      procedures. The function allows for different sampling methods and parameters to 
-      control the prediction process.
-  
-      Args:
-          input_data (str): A reaction SMILES string.
-          model_version (str, optional): The version of the model to use. Defaults to 'latest'.
-          sampling_method (str, optional): The method used for sampling predictions. 
-              Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
-          seq_length (int, optional): The maximum sequence length for the model input. 
-              Defaults to 512.
-          beam_size (int, optional): The beam size for beam search (if applicable). 
-              Defaults to 5.
-          temperature (float, optional): The temperature parameter for controlling randomness 
-              in sampling. Must be a positive float. Higher values increase randomness. 
-              Defaults to 1.0.
-  
-      Returns:
-          list of dict: or something, fill in later when format is finalized
-  
-      Raises:
-          ValueError: 
-            - If `input_data` is not a string.
-            - If `model_version` is not a string.
-            - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
-            - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
-            - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
-            - If `temperature` is not a positive float.
-      """
-      # Validate input parameters
-      if not isinstance(input_data, str):
-          raise ValueError("The 'input_data' argument must be a string.")
+        """
+        Child function to predict purification procedures for a given reaction SMILES string.
+        """
+        return self._predict("purification_protocols", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-      if not isinstance(model_version, str):
-          raise ValueError("The 'model_version' argument must be a string.")
-      
-      if sampling_method not in ['top_k', 'greedy', 'sampling']:
-          raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
+    def batch_predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+        """
+        Child function to batch predict purification procedures for reaction SMILES strings.
+        """
+        return self._batch_predict("purification_protocols", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-      if not isinstance(seq_length, int):
-          raise ValueError("seq_length must be an integer.")
-      if seq_length <= 0 or seq_length > 512:
-          raise ValueError("seq_length must be greater than 0 and less than or equal to 512.")
-  
-      if not isinstance(beam_size, int):
-          raise ValueError("beam_size must be an integer.")
-      if beam_size <= 0 or beam_size > 16:
-          raise ValueError("beam_size must be greater than 0 and less than or equal to 16.")
-        
-      if beam_size == 1:
-          sampling_method = 'greedy'
-      
-      if temperature <= 0:
-          raise ValueError("Temperature must be a positive float.")
-
-      valid_reaction = self.is_valid_reaction_smiles(input_data)
-      if not valid_reaction:
-            raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
-
-      post_request_data = {
-                    "endpoint": "purification_protocols",
-                    "data": {
-                            "model_version": model_version,
-                            "input_data": input_data,
-                            "kwargs": {
-                                      "sampling_method": sampling_method,
-                                      "seq_length": seq_length,
-                                      "beam_size": beam_size,
-                                      "temperature": temperature
-                                      }
-                            }
-                    }
-
-      start = time.time()
-      output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
-      returned_data = {'input': post_request_data, 'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
-
-      return returned_data
-      
     def predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
-      """
-      Predicts a product given reactant SMILES using a template-free approach.
-  
-      This function takes a reactant SMILES strings and predicts potential products
-      The function allows for different sampling methods and parameters to control the 
-      prediction process.
-  
-      Args:
-          input_data (str): Reactant SMILES strings.
-          model_version (str, optional): The version of the model to use. Defaults to 'latest'.
-          sampling_method (str, optional): The method used for sampling predictions. 
-              Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
-          seq_length (int, optional): The maximum sequence length for the model input. 
-              Defaults to 512.
-          beam_size (int, optional): The beam size for beam search (if applicable). 
-              Defaults to 5.
-          temperature (float, optional): The temperature parameter for controlling randomness 
-              in sampling. Must be a positive float. Higher values increase randomness. 
-              Defaults to 1.0.
-  
-      Returns:
-          list of dict: or something, fill in later when format is finalized
-  
-      Raises:
-          ValueError: 
-            - If `input_data` is not a string.
-            - If `model_version` is not a string.
-            - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
-            - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
-            - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
-            - If `temperature` is not a positive float.
-      """
-      # Validate input parameters
-      if not isinstance(input_data, str):
-          raise ValueError("The 'input_data' argument must be a string.")
+        """
+        Child function to predict a product given a reactant SMILES string using a template-free approach.
+        """
+        return self._predict("forward_reaction", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-      if not isinstance(model_version, str):
-          raise ValueError("The 'model_version' argument must be a string.")
-      
-      if sampling_method not in ['top_k', 'greedy', 'sampling']:
-          raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
+    def batch_predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+        """
+        Child function to batch predict products given reactant SMILES strings using a template-free approach.
+        """
+        return self._batch_predict("forward_reaction", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-      if not isinstance(seq_length, int):
-          raise ValueError("seq_length must be an integer.")
-      if seq_length <= 0 or seq_length > 512:
-          raise ValueError("seq_length must be greater than 0 and less than or equal to 512.")
-  
-      if not isinstance(beam_size, int):
-          raise ValueError("beam_size must be an integer.")
-      if beam_size <= 0 or beam_size > 16:
-          raise ValueError("beam_size must be greater than 0 and less than or equal to 16.")
-        
-      if beam_size == 1:
-          sampling_method = 'greedy'
-      
-      if temperature <= 0:
-          raise ValueError("Temperature must be a positive float.")
-
-      valid_smiles = self.is_valid_smiles(input_data)
-      if not valid_smiles:
-            raise ValueError("The 'input_data' argument is not a valid SMILES string.")
-
-      post_request_data = {
-                    "endpoint": "forward_reaction",
-                    "data": {
-                            "model_version": model_version,
-                            "input_data": input_data,
-                            "kwargs": {
-                                      "sampling_method": sampling_method,
-                                      "seq_length": seq_length,
-                                      "beam_size": beam_size,
-                                      "temperature": temperature
-                                      }
-                            }
-                    }
-
-      start = time.time()
-      output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
-      returned_data = {'input': post_request_data, 'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
-
-      return returned_data
-      
     def predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
-      """
-      Predicts retrosynthetic procedures for given reactants and products SMILES string.
-  
-      This function takes a reaction SMILES string with reactants and products and predicts potential procedures.
-      The function allows for different sampling methods and parameters to control the prediction process.
-  
-      Args:
-          input_data (str): A reaction SMILES string.
-          model_version (str, optional): The version of the model to use. Defaults to 'latest'.
-          sampling_method (str, optional): The method used for sampling predictions. 
-              Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'top_k'.
-          seq_length (int, optional): The maximum sequence length for the model input. 
-              Defaults to 512.
-          beam_size (int, optional): The beam size for beam search (if applicable). 
-              Defaults to 5.
-          temperature (float, optional): The temperature parameter for controlling randomness 
-              in sampling. Must be a positive float. Higher values increase randomness. 
-              Defaults to 1.0.
-  
-      Returns:
-          list of dict: or something, fill in later when format is finalized
-  
-      Raises:
-          ValueError: 
-            - If `input_data` is not a string.
-            - If `model_version` is not a string.
-            - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
-            - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
-            - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
-            - If `temperature` is not a positive float.
-      """
-      # Validate input parameters
-      if not isinstance(input_data, str):
-          raise ValueError("The 'input_data' argument must be a string.")
+        """
+        Child function to predict retrosynthetic procedures for a given reactants and products reaction SMILES string.
+        """
+        return self._predict("procedures_given_reactants_products", input_data, model_version, sampling_method, seq_length, beam_size, temperature)
 
-      if not isinstance(model_version, str):
-          raise ValueError("The 'model_version' argument must be a string.")
-      
-      if sampling_method not in ['top_k', 'greedy', 'sampling']:
-          raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
-
-      if not isinstance(seq_length, int):
-          raise ValueError("seq_length must be an integer.")
-      if seq_length <= 0 or seq_length > 512:
-          raise ValueError("seq_length must be greater than 0 and less than or equal to 512.")
-  
-      if not isinstance(beam_size, int):
-          raise ValueError("beam_size must be an integer.")
-      if beam_size <= 0 or beam_size > 16:
-          raise ValueError("beam_size must be greater than 0 and less than or equal to 16.")
-        
-      if beam_size == 1:
-          sampling_method = 'greedy'
-      
-      if temperature <= 0:
-          raise ValueError("Temperature must be a positive float.")
-
-      invalid_reaction = self.is_valid_reaction_smiles(input_data)
-      if not valid_reaction:
-            raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
-
-      post_request_data = {
-                    "endpoint": "procedures_given_reactants_products",
-                    "data": {
-                            "model_version": model_version,
-                            "input_data": input_data,
-                            "kwargs": {
-                                      "sampling_method": sampling_method,
-                                      "seq_length": seq_length,
-                                      "beam_size": beam_size,
-                                      "temperature": temperature
-                                      }
-                            }
-                    }
-
-      start = time.time()
-      output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
-      returned_data = {'input': post_request_data, 'output': output_data['output'], 'status': output_data['status'], 'execution_time': time.time()-start}
-        
-      return returned_data
+    def batch_predict_procedures_given_reactants_products(self, input_data, input_data_type='rxn_smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+        """
+        Child function to batch predict purification procedures for reaction SMILES strings.
+        """
+        return self._batch_predict("procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
