@@ -79,21 +79,17 @@ class SonoraChemAPIWrapper:
             
         """
         try:
-            # Validate URL
             if not url.startswith(('http://', 'https://')):
                 raise ValueError("Invalid URL. Must start with 'http://' or 'https://'")
     
-            # Send the POST request
             response = requests.post(url, 
                                      headers=headers, 
                                      json=data,  # Use json parameter for automatic JSON encoding
                                      timeout=timeout, 
                                      verify=verify_ssl)
             
-            # Raise an HTTPError for bad responses (4xx and 5xx status codes)
             response.raise_for_status()
     
-            # Attempt to parse and return the JSON response
             return response.json()
     
         except requests.RequestException as e:
@@ -152,13 +148,10 @@ class SonoraChemAPIWrapper:
             HTTPError: If the request to the API fails.
             ValueError: If the response from the API is not in the expected format.
         """
-        # Prepare the input data with the API key
         input_data = {"api_key": self._api_key}
     
-        # Send a POST request to the usage URL with the provided headers and input data
         output_data = self._send_post_request(self._usage_url, self._headers, input_data)
     
-        # Return the output data containing the API usage statistics
         return output_data['body']
 
     def is_valid_smiles(self, smiles):
@@ -173,26 +166,21 @@ class SonoraChemAPIWrapper:
         bool: True if the SMILES string is valid, False otherwise.
         """
         try:
-            # Parse the SMILES string
             mol = Chem.MolFromSmiles(smiles)
             
-            # Check if the molecule is valid
             if mol is None:
                 return False
             
-            # Check for atom mapping and remove if present
             if any(atom.GetAtomMapNum() != 0 for atom in mol.GetAtoms()):
                 print("Warning: Atom mapping found and removed.")
                 for atom in mol.GetAtoms():
                     atom.SetAtomMapNum(0)
             
-            # Check for isotopes and remove if present
             if any(atom.GetIsotope() != 0 for atom in mol.GetAtoms()):
                 print("Warning: Isotopes found and removed.")
                 for atom in mol.GetAtoms():
                     atom.SetIsotope(0)
             
-            # Sanitize the molecule
             Chem.SanitizeMol(mol)
             
             return True
@@ -212,31 +200,25 @@ class SonoraChemAPIWrapper:
         bool: True if the reaction SMILES is valid, False otherwise.
         """
         try:
-            # Parse the reaction SMILES
             reaction = AllChem.ReactionFromSmarts(reaction_smiles)
             
-            # Check if the reaction is valid
             if reaction is None:
                 return False
             
-            # Check for atom mapping and remove if present
             for mol in reaction.GetReactants() + reaction.GetProducts():
                 if any(atom.GetAtomMapNum() != 0 for atom in mol.GetAtoms()):
                     print("Warning: Atom mapping found and removed.")
                     for atom in mol.GetAtoms():
                         atom.SetAtomMapNum(0)
             
-            # Check for isotopes and remove if present
             for mol in reaction.GetReactants() + reaction.GetProducts():
                 if any(atom.GetIsotope() != 0 for atom in mol.GetAtoms()):
                     print("Warning: Isotopes found and removed.")
                     for atom in mol.GetAtoms():
                         atom.SetIsotope(0)
             
-            # Sanitize the reaction
             Chem.SanitizeRxn(reaction)
             
-            # Check if the reaction can be performed
             if reaction.Validate()[1] != 0:
                 return False
             
@@ -279,32 +261,32 @@ class SonoraChemAPIWrapper:
               - if `input_data` is not a valid SMILES string.
         """
         if not isinstance(input_data, str):
-            raise ValueError("The 'input_data' argument must be a string.")
+            raise TypeError("The 'input_data' argument must be a string.")
             
         if input_data_type not in ['smiles', 'rxn_smiles']:
             raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
 
         if not isinstance(model_version, str):
-            raise ValueError("The 'model_version' argument must be a string.")
+            raise TypeError("The 'model_version' argument must be a string.")
         
         if sampling_method not in ['top_k', 'greedy', 'sampling']:
             raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
 
         if not isinstance(seq_length, int):
-            raise ValueError("seq_length must be an integer.")
+            raise TypeError("The 'seq_length' argument must be an integer.")
         if seq_length <= 0 or seq_length > 512:
-            raise ValueError("seq_length must be greater than 0 and less than or equal to 512.")
+            raise ValueError("The 'seq_length' argument must be greater than 0 and less than or equal to 512.")
     
         if not isinstance(beam_size, int):
-            raise ValueError("beam_size must be an integer.")
+            raise TypeError("The 'beam_size' argument must be an integer.")
         if beam_size <= 0 or beam_size > 16:
-            raise ValueError("beam_size must be greater than 0 and less than or equal to 16.")
+            raise ValueError("The 'beam_size' argument must be greater than 0 and less than or equal to 16.")
         
         if beam_size == 1:
             sampling_method = 'greedy'
         
         if temperature <= 0:
-            raise ValueError("Temperature must be a positive float.")
+            raise ValueError("The 'temperature' argument must be a positive float.")
 
         if input_data_type == 'smiles':
             valid_smiles = self.is_valid_smiles(input_data)
@@ -375,32 +357,32 @@ class SonoraChemAPIWrapper:
               - If any element in `input_data` is not a valid SMILES string.
         """
         if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
-            raise ValueError("The 'input_data' argument must be a list of strings.")
+            raise TypeError("The 'input_data' argument must be a list of strings.")
 
         if input_data_type not in ['smiles', 'rxn_smiles']:
             raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
 
         if not isinstance(model_version, str):
-            raise ValueError("The 'model_version' argument must be a string.")
+            raise TypeError("The 'model_version' argument must be a string.")
 
         if sampling_method not in ['greedy', 'sampling']:
             raise ValueError("Invalid sampling method. Must be 'greedy', or 'sampling'.")
 
         if not isinstance(seq_length, int):
-            raise ValueError("seq_length must be an integer.")
+            raise TypeError("The 'seq_length' argument must be an integer.")
         if seq_length <= 0 or seq_length > 512:
-            raise ValueError("seq_length must be greater than 0 and less than or equal to 512.")
+            raise ValueError("The 'seq_length' argument must be greater than 0 and less than or equal to 512.")
 
         if not isinstance(beam_size, int):
-            raise ValueError("beam_size must be an integer.")
+            raise TypeError("The 'beam_size' argument must be an integer.")
         if beam_size <= 0 or beam_size > 16:
-            raise ValueError("beam_size must be greater than 0 and less than or equal to 16.")
+            raise ValueError("The 'beam_size' argument must be greater than 0 and less than or equal to 16.")
 
         if beam_size == 1:
             sampling_method = 'greedy'
 
         if temperature <= 0:
-            raise ValueError("Temperature must be a positive float.")
+            raise ValueError("The 'temperature' argument must be a positive float.")
 
         for smiles in input_data:
             valid_smiles = self.is_valid_smiles(smiles)
@@ -454,7 +436,7 @@ class SonoraChemAPIWrapper:
         """
         Child function to batch predict retrosynthetic procedures for SMILES strings using a template-free approach.
         """
-        return self._batch_predict("procedures_retro_template_free", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_procedures_retro_template_free", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
     def predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
@@ -466,7 +448,7 @@ class SonoraChemAPIWrapper:
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("purification_protocols", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_purification_protocols", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
     def predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
@@ -478,7 +460,7 @@ class SonoraChemAPIWrapper:
         """
         Child function to batch predict products given reactant SMILES strings using a template-free approach.
         """
-        return self._batch_predict("forward_reaction", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_forward_reaction", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
     def predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
@@ -490,4 +472,4 @@ class SonoraChemAPIWrapper:
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
