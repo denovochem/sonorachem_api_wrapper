@@ -4,6 +4,8 @@ import time
 from typing import Dict, Any, Optional
 from rdkit import Chem
 from rdkit.Chem import AllChem
+from rdkit import RDLogger                                                                                                                                                               
+RDLogger.DisableLog('rdApp.*')                                                                                                                                                           
 
 class SonoraChemAPIWrapper:
     """
