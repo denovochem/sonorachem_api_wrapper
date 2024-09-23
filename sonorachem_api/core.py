@@ -5,7 +5,10 @@ from typing import Dict, Any, Optional
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit import RDLogger                                                                                                                                                               
-RDLogger.DisableLog('rdApp.*')                                                                                                                                                           
+RDLogger.DisableLog('rdApp.*')     
+
+import utils
+from utils import randomize_smiles, randomize_reaction_smiles
 
 class SonoraChemAPIWrapper:
     """
@@ -303,11 +306,13 @@ class SonoraChemAPIWrapper:
             raise ValueError("The 'temperature' argument must be a positive float.")
 
         if input_data_type == 'smiles':
+            input_data = randomize_smiles(input_data)
             valid_smiles = self.is_valid_smiles(input_data)
             if not valid_smiles:
                 raise ValueError("The 'input_data' argument is not a valid SMILES string.")
                 
         if input_data_type == 'rxn_smiles':
+            input_data = randomize_reaction_smiles(input_data)
             valid_rxn_smiles = self.is_valid_reaction_smiles(input_data)
             if not valid_rxn_smiles:
                 raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
@@ -401,12 +406,14 @@ class SonoraChemAPIWrapper:
             raise ValueError("The 'temperature' argument must be a positive float.")
 
         if input_data_type == 'smiles':
+            input_data = [randomize_smiles(smiles) for smiles in input_data]
             for smiles in input_data:
                 valid_smiles = self.is_valid_smiles(smiles)
                 if not valid_smiles:
                     raise ValueError(f"The SMILES string '{smiles}' is not valid.")
                 
         if input_data_type == 'rxn_smiles':
+            input_data = [randomize_reaction_smiles(rxn_smiles) for rxn_smiles in input_data]
             for rxn_smiles in input_data:
                 valid_rxn_smiles = self.is_valid_reaction_smiles(rxn_smiles)
                 if not valid_rxn_smiles:
