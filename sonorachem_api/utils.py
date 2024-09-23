@@ -68,7 +68,7 @@ def canonicalize_smiles(smiles, standardize_mol=False, isomeric=True, remove_map
     except:
         pass
 
-def randomize_reaction_smiles(smiles, standardize_mol=False, isomeric=True, grouped=True, shuffle_order=True):
+def randomize_reaction_smiles(smiles, standardize_mol=False, isomeric=True, grouped=False, shuffle_order=True):
     try:
         split_roles = smiles.split('>>')
         if grouped:
@@ -106,7 +106,7 @@ def randomize_reaction_smiles(smiles, standardize_mol=False, isomeric=True, grou
     except:
         pass
 
-def canonicalize_reaction_smiles(smiles, standardize_mol=False, isomeric=True, grouped=True):
+def canonicalize_reaction_smiles(smiles, standardize_mol=False, isomeric=True, grouped=False):
     try:
         split_roles = smiles.split('>>')
         if grouped:
