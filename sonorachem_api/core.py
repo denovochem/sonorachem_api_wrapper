@@ -205,19 +205,31 @@ class SonoraChemAPIWrapper:
             if reaction is None:
                 return False
             
-            for mol in reaction.GetReactants() + reaction.GetProducts():
+            for mol in reaction.GetReactants():
+                if any(atom.GetAtomMapNum() != 0 for atom in mol.GetAtoms()):
+                    print("Warning: Atom mapping found and removed.")
+                    for atom in mol.GetAtoms():
+                        atom.SetAtomMapNum(0)
+    
+            for mol in reaction.GetProducts():
                 if any(atom.GetAtomMapNum() != 0 for atom in mol.GetAtoms()):
                     print("Warning: Atom mapping found and removed.")
                     for atom in mol.GetAtoms():
                         atom.SetAtomMapNum(0)
             
-            for mol in reaction.GetReactants() + reaction.GetProducts():
+            for mol in reaction.GetReactants():
+                if any(atom.GetIsotope() != 0 for atom in mol.GetAtoms()):
+                    print("Warning: Isotopes found and removed.")
+                    for atom in mol.GetAtoms():
+                        atom.SetIsotope(0)
+    
+            for mol in reaction.GetProducts():
                 if any(atom.GetIsotope() != 0 for atom in mol.GetAtoms()):
                     print("Warning: Isotopes found and removed.")
                     for atom in mol.GetAtoms():
                         atom.SetIsotope(0)
             
-            Chem.SanitizeRxn(reaction)
+            Chem.rdChemReactions.SanitizeRxn(reaction)
             
             if reaction.Validate()[1] != 0:
                 return False
@@ -384,11 +396,6 @@ class SonoraChemAPIWrapper:
         if temperature <= 0:
             raise ValueError("The 'temperature' argument must be a positive float.")
 
-        for smiles in input_data:
-            valid_smiles = self.is_valid_smiles(smiles)
-            if not valid_smiles:
-                raise ValueError(f"The SMILES string '{smiles}' is not valid.")
-
         if input_data_type == 'smiles':
             for smiles in input_data:
                 valid_smiles = self.is_valid_smiles(smiles)
@@ -399,7 +406,7 @@ class SonoraChemAPIWrapper:
             for rxn_smiles in input_data:
                 valid_rxn_smiles = self.is_valid_reaction_smiles(rxn_smiles)
                 if not valid_rxn_smiles:
-                    raise ValueError(f"The reaction SMILES string '{smiles}' is not valid.")
+                    raise ValueError(f"The reaction SMILES string '{rxn_smiles}' is not valid.")
 
         post_request_data = {
             "endpoint": endpoint,
@@ -430,46 +437,46 @@ class SonoraChemAPIWrapper:
         """
         Child function to predict retrosynthetic procedures for a given SMILES string using a template-free approach.
         """
-        return self._predict("procedures_retro_template_free", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._predict("procedures_retro_template_free", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
     def batch_predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to batch predict retrosynthetic procedures for SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_procedures_retro_template_free", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_procedures_retro_template_free", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
     def predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict purification procedures for a given reaction SMILES string.
         """
-        return self._predict("purification_protocols", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._predict("purification_protocols", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
     def batch_predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_purification_protocols", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_purification_protocols", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
     def predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict a product given a reactant SMILES string using a template-free approach.
         """
-        return self._predict("forward_reaction", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._predict("forward_reaction", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
     def batch_predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to batch predict products given reactant SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_forward_reaction", input_data, input_data_type='smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_forward_reaction", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
     def predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict retrosynthetic procedures for a given reactants and products reaction SMILES string.
         """
-        return self._predict("procedures_given_reactants_products", input_data, model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._predict("procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-    def batch_predict_procedures_given_reactants_products(self, input_data, input_data_type='rxn_smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def batch_predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
