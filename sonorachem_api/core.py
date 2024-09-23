@@ -7,8 +7,7 @@ from rdkit.Chem import AllChem
 from rdkit import RDLogger                                                                                                                                                               
 RDLogger.DisableLog('rdApp.*')     
 
-import utils
-from utils import randomize_smiles, randomize_reaction_smiles
+from .utils import randomize_smiles, randomize_reaction_smiles
 
 class SonoraChemAPIWrapper:
     """
