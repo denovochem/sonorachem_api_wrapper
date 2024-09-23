@@ -45,6 +45,8 @@ reactants = [
             'COc1ccccc1C(=O)Cl.Cl[Al](Cl)Cl.O=S(=O)(c1ccccc1)c1ccc(Oc2ccccc2)cc1.ClCCCl.O.[K+].[OH-].O=S(=O)([O-])[O-].[Mg+2]'
             ]
 predictions = sonorachem_api_wrapper.batch_predict_forward_reaction(reactants, sampling_method='sampling', temperature=0.3)
+
+print(predictions['output'])
 ```
 
 ### Template-free procedure retrosynthesis prediction:
@@ -63,6 +65,8 @@ smiles = [
           'CN1C=NC2=C1C(=O)N(C(=O)N2C)C'
           ]
 predictions = sonorachem_api_wrapper.batch_predict_procedures_retro_template_free(smiles, sampling_method='sampling', temperature=0.7)
+
+print(predictions['output'])
 ```
 
 ### Procedure and condition prediction given reactants and products:
@@ -81,6 +85,8 @@ reaction_smiles = [
                   'c1(=O)n(C)c2nc[nH]c2c(=O)n1C.CI>>CN1C=NC2=C1C(=O)N(C(=O)N2C)C'
                   ]
 predictions = sonorachem_api_wrapper.batch_predict_procedures_given_reactants_products(reaction_smiles, sampling_method='greedy')
+
+print(predictions['output'])
 ```
 
 ### Purification protocol prediction:
@@ -99,6 +105,8 @@ reaction_smiles = [
                   'c1(=O)n(C)c2nc[nH]c2c(=O)n1C.CI.O=CN(C)C.[K+].[K+].[O-]C([O-])=O.O.ClCCl>>CN1C=NC2=C1C(=O)N(C(=O)N2C)C'
                   ]
 predictions = sonorachem_api_wrapper.batch_predict_purification_protocols(reaction_smiles, sampling_method='sampling', temperature=0.2)
+
+print(predictions['output'])
 ```
 
 ## Documentation
