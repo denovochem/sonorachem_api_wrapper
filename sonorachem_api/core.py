@@ -335,7 +335,7 @@ class SonoraChemAPIWrapper:
         start = time.time()
         output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
         returned_data = {
-            'input': post_request_data,
+            'input': post_request_data['input'],
             'output': output_data['output'],
             'status': output_data['status'],
             'execution_time': time.time() - start
@@ -437,7 +437,7 @@ class SonoraChemAPIWrapper:
         start = time.time()
         output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
         returned_data = {
-            'input': post_request_data,
+            'input': post_request_data['input'],
             'output': output_data['output'],
             'status': output_data['status'],
             'execution_time': time.time() - start
