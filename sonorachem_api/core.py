@@ -38,11 +38,45 @@ class SonoraChemAPIWrapper:
         self._runpod_url = self._base_url + '/runpod'
         self._usage_url = self._base_url + '/get_usage'
         self._headers = self._construct_headers()
+        self._validate_api_key()
 
-    # def _validate_api_key(self):
+    def _validate_api_key(self):
+        """
+        Validate the API key by sending a POST request to the usage URL.
+    
+        This method attempts to validate the API key stored in the instance variable
+        self._api_key. It sends a POST request to the usage URL and checks the response.
+    
+        Raises:
+            ValueError: If the API key validation fails or if there's an unexpected
+                        response from the server.
+    
+        Returns:
+            None
+    
+        Note:
+            This is a private method, as indicated by the underscore prefix.
+        """
+        # Prepare the input data for the POST request
+        input_data = {"api_key": self._api_key}
         
-        
+        # Send the POST request and get the response
+        output_data = self._send_post_request(self._usage_url, self._headers, input_data)
+    
+        # Check if the response contains a status code
+        if 'statusCode' not in output_data:
+            raise ValueError(
+                "Error validating API key. Contact us at denovochem.com/contact "
+                "to obtain an API key if you do not have one, or try again."
+            )
+        else:
+            # Check if the status code indicates success (200)
+            if output_data['statusCode'] != 200:
+                raise ValueError(
+                    "Error validating API key. Contact us at denovochem.com/contact "
+                    "to obtain an API key if you do not have one, or try again"
 
+                
     def _construct_headers(self) -> dict:
         """
         Construct header, required for all requests.
@@ -140,6 +174,7 @@ class SonoraChemAPIWrapper:
         logger.info("Set API key to {}".format(api_key))
         self._api_key = api_key
         self._headers = self._construct_headers()
+        self._validate_api_key()
         
     def get_api_usage(self):
         """
@@ -159,7 +194,6 @@ class SonoraChemAPIWrapper:
         input_data = {"api_key": self._api_key}
     
         output_data = self._send_post_request(self._usage_url, self._headers, input_data)
-        print(output_data)
     
         return output_data['body']
 
