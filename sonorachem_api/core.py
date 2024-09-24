@@ -310,6 +310,7 @@ class SonoraChemAPIWrapper:
             ValueError: 
               - If `input_data` is not a string.
               - If `model_version` is not a string.
+              - If `input_data_type` is not one of 'smiles', 'rxn_smiles'.
               - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
               - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
               - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
@@ -345,13 +346,11 @@ class SonoraChemAPIWrapper:
             raise ValueError("The 'temperature' argument must be a positive float.")
 
         if input_data_type == 'smiles':
-            input_data = randomize_smiles(input_data)
             valid_smiles = self.is_valid_smiles(input_data)
             if not valid_smiles:
                 raise ValueError("The 'input_data' argument is not a valid SMILES string.")
                 
         if input_data_type == 'rxn_smiles':
-            input_data = randomize_reaction_smiles(input_data)
             valid_rxn_smiles = self.is_valid_reaction_smiles(input_data)
             if not valid_rxn_smiles:
                 raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
@@ -383,7 +382,7 @@ class SonoraChemAPIWrapper:
     
         return returned_data
 
-    def _batch_predict(self, endpoint, input_data, input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def _batch_predict(self, endpoint, input_data,  input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Parent function to make batch predictions.
 
@@ -409,6 +408,7 @@ class SonoraChemAPIWrapper:
         Raises:
             ValueError: 
               - If `input_data` is not a list of strings.
+              - If `input_data_type` is not one of 'smiles', 'rxn_smiles'.
               - If `model_version` is not a string.
               - If `sampling_method` is not one of 'greedy', or 'sampling'.
               - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
@@ -445,14 +445,12 @@ class SonoraChemAPIWrapper:
             raise ValueError("The 'temperature' argument must be a positive float.")
 
         if input_data_type == 'smiles':
-            input_data = [randomize_smiles(smiles) for smiles in input_data]
             for smiles in input_data:
                 valid_smiles = self.is_valid_smiles(smiles)
                 if not valid_smiles:
                     raise ValueError(f"The SMILES string '{smiles}' is not valid.")
                 
         if input_data_type == 'rxn_smiles':
-            input_data = [randomize_reaction_smiles(rxn_smiles) for rxn_smiles in input_data]
             for rxn_smiles in input_data:
                 valid_rxn_smiles = self.is_valid_reaction_smiles(rxn_smiles)
                 if not valid_rxn_smiles:
