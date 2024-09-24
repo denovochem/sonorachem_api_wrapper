@@ -39,6 +39,9 @@ class SonoraChemAPIWrapper:
         self._usage_url = self._base_url + '/get_usage'
         self._headers = self._construct_headers()
 
+    def _validate_api_key(self):
+        
+
     def _construct_headers(self) -> dict:
         """
         Construct header, required for all requests.
@@ -155,6 +158,7 @@ class SonoraChemAPIWrapper:
         input_data = {"api_key": self._api_key}
     
         output_data = self._send_post_request(self._usage_url, self._headers, input_data)
+        print(output_data)
     
         return output_data['body']
 
