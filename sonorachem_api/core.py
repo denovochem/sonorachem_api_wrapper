@@ -62,7 +62,7 @@ class SonoraChemAPIWrapper:
         response = requests.post(self._usage_url, 
                         headers=self._headers, 
                         json=input_data)
-
+        print(response)
         if 'statusCode' not in response:
             raise ValueError(
                 "Error validating API key. Contact us at denovochem.com/contact "
