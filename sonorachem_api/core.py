@@ -1,12 +1,14 @@
 import requests
-import logger
 import json
 import time
 from typing import Dict, Any, Optional
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit import RDLogger                                                                                                                                                               
-RDLogger.DisableLog('rdApp.*')     
+RDLogger.DisableLog('rdApp.*')  
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 from .utils import randomize_smiles, randomize_reaction_smiles
 
