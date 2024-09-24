@@ -39,7 +39,8 @@ class SonoraChemAPIWrapper:
         self._usage_url = self._base_url + '/get_usage'
         self._headers = self._construct_headers()
 
-    def _validate_api_key(self):
+    # def _validate_api_key(self):
+        
         
 
     def _construct_headers(self) -> dict:
