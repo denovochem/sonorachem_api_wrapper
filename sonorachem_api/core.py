@@ -75,6 +75,7 @@ class SonoraChemAPIWrapper:
                 raise ValueError(
                     "Error validating API key. Contact us at denovochem.com/contact "
                     "to obtain an API key if you do not have one, or try again"
+                )
 
                 
     def _construct_headers(self) -> dict:
