@@ -54,24 +54,19 @@ class SonoraChemAPIWrapper:
     
         Returns:
             None
-    
-        Note:
-            This is a private method, as indicated by the underscore prefix.
         """
-        # Prepare the input data for the POST request
         input_data = {"api_key": self._api_key}
         
-        # Send the POST request and get the response
-        output_data = self._send_post_request(self._usage_url, self._headers, input_data)
-    
-        # Check if the response contains a status code
-        if 'statusCode' not in output_data:
+        response = requests.post(self._usage_url, 
+                        headers=self._headers, 
+                        json=input_data)
+
+        if 'statusCode' not in response:
             raise ValueError(
                 "Error validating API key. Contact us at denovochem.com/contact "
                 "to obtain an API key if you do not have one, or try again."
             )
         else:
-            # Check if the status code indicates success (200)
             if output_data['statusCode'] != 200:
                 raise ValueError(
                     "Error validating API key. Contact us at denovochem.com/contact "
