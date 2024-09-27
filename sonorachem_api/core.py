@@ -29,12 +29,6 @@ class SonoraChemAPIWrapper:
             api_key (str): an API key to access the service.
             base_url (str, optional): base url for the service. If not provided it will default to
                 the De Novo Chem AWS server
-
-        Examples:
-            Initialize the wrapper by simply providing an API key:
-
-            >>> from sonorachem_api import SonoraChemAPIWrapper
-            >>> sonorachem_api_wrapper = SonoraChemAPIWrapper(api_key=api_key)
         """
         self._api_key = api_key
         self._base_url = base_url
@@ -530,3 +524,72 @@ class SonoraChemAPIWrapper:
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
         return self._batch_predict("batch_procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+
+    def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest'):
+        """
+        Extracts reaction procedure JSONs from a list of text passages.
+    
+        This function processes a list of text passages to extract reaction procedures,
+        which are then returned as JSON objects. The function validates the input data
+        and sends a POST request to a specified endpoint for processing.
+    
+        Parameters:
+            input_data : list of str
+                A list of text passages from which to extract reaction procedures.
+                Each passage should be a string.
+        
+            model_version : str, optional
+                The version of the model to use for extraction. Defaults to 'latest'.
+    
+        Returns:
+            dict
+                A dictionary containing the following keys:
+                - 'input': The input data sent for processing.
+                - 'output': The output data received from the processing endpoint.
+                - 'status': The status of the processing request.
+                - 'execution_time': The time taken to process the request in seconds.
+    
+        Raises:
+            TypeError
+                If 'input_data' is not a list of strings or if 'model_version' is not a string.
+            ValueError
+                If 'input_data' contains more than 300 passages or if any passage is longer than 8192 characters.
+                If 'input_data_type' is not 'smiles' or 'rxn_smiles'.
+        """
+    
+        if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
+            raise TypeError("The 'input_data' argument must be a list of strings.")
+    
+        if len(input_data) > 300:
+            raise ValueError("The 'input_data' argument must not contain more than 300 passages.")
+        
+        for datum in input_data:
+            if len(datum) > 8192:
+                raise ValueError("Passages in the 'input_data' argument must not be longer than 8192 characters.") 
+    
+        if not isinstance(model_version, str):
+            raise TypeError("The 'model_version' argument must be a string.")
+    
+        post_request_data = {
+            "endpoint": "reaction_extraction",
+            "data": {
+                "model_version": "extract_reaction_procedure_jsons_from_text",
+                "input_data": input_data,
+                "kwargs": {}
+            }
+        }
+    
+        post_request_data = {"input": post_request_data}
+    
+        start = time.time()
+
+        output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+    
+        returned_data = {
+            'input': post_request_data['input'],
+            'output': output_data['output'],
+            'status': output_data['status'],
+            'execution_time': time.time() - start
+        }
+        
+        return returned_data
