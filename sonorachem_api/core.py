@@ -1,6 +1,12 @@
 import requests
 import json
 import time
+import io
+import zipfile
+import tempfile
+import base64
+from pathlib import Path
+from ast import literal_eval
 from typing import Dict, Any, Optional
 from rdkit import Chem
 from rdkit.Chem import AllChem
@@ -32,8 +38,10 @@ class SonoraChemAPIWrapper:
         """
         self._api_key = api_key
         self._base_url = base_url
-        self._runpod_url = self._base_url + '/runpod'
+        self._sonora_chem_models_url = self._base_url + '/sonora_chem_models'
         self._usage_url = self._base_url + '/get_usage'
+        self._monsoon_chem_url = self._base_url + '/monsoon_chem'
+        self._monsoon_chem_status_url = self._base_url + '/monsoon_chem_status'
         self._headers = self._construct_headers()
         self._validate_api_key()
 
@@ -149,8 +157,10 @@ class SonoraChemAPIWrapper:
             base_url (str): base url for the service to set.
         """
         self._base_url = base_url
-        self._runpod_url = self._base_url + '/runpod'
+        self._sonora_chem_models_url = self._base_url + '/sonora_chem_models'
         self._usage_url = self._base_url + '/get_usage'
+        self._monsoon_chem_url = self._base_url + '/monsoon_chem'
+        self._monsoon_chem_status_url = self._base_url + '/monsoon_chem_status'
 
     def set_api_key(self, api_key: str):
         """
@@ -366,7 +376,7 @@ class SonoraChemAPIWrapper:
         post_request_data = {"input": post_request_data}
 
         start = time.time()
-        output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+        output_data = self._send_post_request(self._sonora_chem_models_url, self._headers, post_request_data)
         returned_data = {
             'input': post_request_data['input'],
             'output': output_data['output'],
@@ -467,7 +477,7 @@ class SonoraChemAPIWrapper:
         post_request_data = {"input": post_request_data}
 
         start = time.time()
-        output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+        output_data = self._send_post_request(self._sonora_chem_models_url, self._headers, post_request_data)
         returned_data = {
             'input': post_request_data['input'],
             'output': output_data['output'],
@@ -525,7 +535,7 @@ class SonoraChemAPIWrapper:
         """
         return self._batch_predict("batch_procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-    def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest'):
+    def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', output_data_format='zip', upload_to_external_storage=True):
         """
         Extracts reaction procedure JSONs from a list of text passages.
     
@@ -540,6 +550,15 @@ class SonoraChemAPIWrapper:
         
             model_version : str, optional
                 The version of the model to use for extraction. Defaults to 'latest'.
+
+            compress_input: bool, optional
+                Whether to compress the input_data before sending post request. Defaults to True. 
+
+            output_data_format: str, optional
+                Format to return processed data. Must be one of XXXX
+
+            upload_to_external_storage: bool, optional
+                Whether to upload the output data to external storage. Defaults to True. 
     
         Returns:
             dict
@@ -569,27 +588,158 @@ class SonoraChemAPIWrapper:
     
         if not isinstance(model_version, str):
             raise TypeError("The 'model_version' argument must be a string.")
+
+        memory_file = io.BytesIO()
+        with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr('input_data.txt', input_data)
+        memory_file.seek(0)
+        zip_content = memory_file.getvalue()
+        input_data = base64.b64encode(zip_content).decode('utf-8')
     
         post_request_data = {
             "endpoint": "reaction_extraction",
             "data": {
                 "model_version": "extract_reaction_procedure_jsons_from_text",
                 "input_data": input_data,
-                "kwargs": {}
+                "kwargs": {
+                    "compress_input": True,
+                    "output_data_format": 'zip',
+                    "upload_to_external_storage": upload_to_external_storage
             }
         }
     
         post_request_data = {"input": post_request_data}
-    
-        start = time.time()
 
-        output_data = self._send_post_request(self._runpod_url, self._headers, post_request_data)
+        output_data = self._send_post_request(self._monsoon_chem_url, self._headers, post_request_data)
     
         returned_data = {
             'input': post_request_data['input'],
-            'output': output_data['output'],
-            'status': output_data['status'],
-            'execution_time': time.time() - start
+            'job_id': output_data.json()['id']
+            'status': output_data.json()['stats']
         }
         
         return returned_data
+
+    def _process_completed_response(response):
+        """
+        Process a completed API response, extract and decode the ZIP content,
+        and return the processed JSON data.
+    
+        Args:
+            response (requests.Response): The API response object.
+    
+        Returns:
+            dict: The processed JSON data.
+    
+        Raises:
+            ValueError: If the response status is not 'COMPLETED'.
+        """
+        if response.json()['status'] != 'COMPLETED':
+            raise ValueError("Response status is not COMPLETED")
+    
+        encoded_zip = response.json()['output']
+        zip_content = base64.b64decode(encoded_zip)
+    
+        with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
+            temp_zip.write(zip_content)
+            temp_zip_path = temp_zip.name
+    
+        json_data = self._process_zip_file(temp_zip_path)
+    
+        Path(temp_zip_path).unlink()
+        
+        return list(json_data.values())
+    
+    def _process_zip_file(zip_path):
+        """
+        Process a ZIP file and extract JSON data from all .txt files within it.
+    
+        Args:
+            zip_path (str): The path to the ZIP file.
+    
+        Returns:
+            dict: The combined JSON data from all processed text files.
+        """
+        combined_json_data = {}
+        with zipfile.ZipFile(zip_path, 'r') as archive:
+            for file_name in archive.namelist():
+                if file_name.endswith('.txt'):
+                    text = self._process_text_file(archive, file_name)
+                    json_data = literal_eval(text)
+                    combined_json_data[file_name] = json_data
+        return combined_json_data
+    
+    def _process_text_file(archive, file_name):
+        """
+        Process a single text file within a ZIP archive.
+    
+        Args:
+            archive (zipfile.ZipFile): The ZIP archive object.
+            file_name (str): The name of the text file to process.
+    
+        Returns:
+            str: The concatenated content of the text file.
+        """
+        with archive.open(file_name) as text_file:
+            content = text_file.read().decode('utf-8')
+        return ''.join(content.splitlines())
+
+    def check_status_extract_reaction_procedure_jsons_from_text(self, input_data, wait_to_complete = True, timeout = 1800):
+            """
+            Checks the status of reaction procedure extraction job.
+        
+            This function takes the the output data of an asynchronus request to extract reaction
+            data and returns data based on user supplied inputs. 
+        
+            Parameters:
+                input_data : XXX
+                    The data returned from the asynchronus request to extract reaction data. 
+    
+                wait_to_complete : bool, optional
+                    Whether to wait for the job to finish, and then return the extracted reaction data. 
+                    Defaults to True. 
+    
+                timeout: float, optional
+                    The amount of time to wait for the job to finish if wait_to_complete is True. Must be
+                    a positive number less than 3600. Defaults to 1800. 
+        
+            Returns:
+            
+        
+            Raises:
+                
+            """
+
+            post_request_data = {
+                "id": input_data["id"],
+            }
+    
+            output_data = self._send_post_request(self._monsoon_chem_status_url, self._headers, post_request_data)
+        
+            response_status = output_data.json()['status']
+    
+            if wait_to_complete == True:
+                start = time.time()
+                try:
+                    while response_status not in ['COMPLETED', 'FAILED'] and time.time()-start < timeout:
+                        time.sleep(5)
+                        response = requests.post(status_url, 
+                                        headers=headers)
+                        response_status = response.json()['status']
+                except KeyboardInterrupt:
+                    print("\nInterrupted by user.")
+    
+                if response_status == 'COMPLETED':
+                    out = self._process_completed_response(response.json())
+                    
+                returned_data = {
+                    'input': post_request_data['input'],
+                    'output': output_data.json()
+                }
+    
+            else:
+                returned_data = {
+                    'status': response_status,
+                }
+            
+            return returned_data
