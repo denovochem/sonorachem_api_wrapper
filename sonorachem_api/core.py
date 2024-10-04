@@ -730,16 +730,26 @@ class SonoraChemAPIWrapper:
                     print("\nInterrupted by user.")
     
                 if response_status == 'COMPLETED':
-                    out = self._process_completed_response(response.json())
+                    output_data = self._process_completed_response(response.json())
                     
-                returned_data = {
-                    'input': post_request_data['input'],
-                    'output': output_data.json()
+                    returned_data = {
+                        'status': response_status,
+                        'output': output_data
+                    }
+
+                else:
+                    returned_data = {
+                    'status': response_status,
+                    'output': 'An error has occured'
                 }
     
             else:
                 returned_data = {
                     'status': response_status,
                 }
-            
+
+                if response_status == 'COMPLETED':
+                    output_data = self._process_completed_response(response.json())
+                    returned_data['output'] = output_data
+                    
             return returned_data
