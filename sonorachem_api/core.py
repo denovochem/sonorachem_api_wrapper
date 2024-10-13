@@ -615,7 +615,7 @@ class SonoraChemAPIWrapper:
     
         returned_data = {
             'input': post_request_data['input'],
-            'job_id': output_data.json()['id']
+            'job_id': output_data.json()['id'],
             'status': output_data.json()['stats']
         }
         
