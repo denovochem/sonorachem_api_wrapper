@@ -605,6 +605,7 @@ class SonoraChemAPIWrapper:
                     "compress_input": True,
                     "output_data_format": 'zip',
                     "upload_to_external_storage": upload_to_external_storage
+                }
             }
         }
     
