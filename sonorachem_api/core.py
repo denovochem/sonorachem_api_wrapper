@@ -26,7 +26,7 @@ class SonoraChemAPIWrapper:
     def __init__(
         self,
         api_key: str,
-        base_url: Optional[str] = 'https://hwsvflxtqh.execute-api.us-east-2.amazonaws.com/denovochem_api_stage',
+        base_url: Optional[str] = 'https://hwsvflxtqh.execute-api.us-east-2.amazonaws.com/denovochem_api_stage/runpod',
     ):
         """
         SonoraChemAPIWrapper constructor.
@@ -38,10 +38,6 @@ class SonoraChemAPIWrapper:
         """
         self._api_key = api_key
         self._base_url = base_url
-        self._sonora_chem_models_url = self._base_url + '/sonora_chem_models'
-        self._usage_url = self._base_url + '/get_usage'
-        self._monsoon_chem_url = self._base_url + '/monsoon_chem'
-        self._monsoon_chem_status_url = self._base_url + '/monsoon_chem_status'
         self._headers = self._construct_headers()
         self._validate_api_key()
 
@@ -59,13 +55,11 @@ class SonoraChemAPIWrapper:
         Returns:
             None
         """
-        input_data = {"api_key": self._api_key}
-        
-        response = requests.post(self._usage_url, 
-                        headers=self._headers, 
-                        json=input_data)
+        post_request_data = {
+            "endpoint": 'get_usage',
+        }
 
-        response = response.json()
+        response = self._send_post_request(self._base_url, self._headers, input_data)
         
         if 'statusCode' not in response:
             raise ValueError(
@@ -78,7 +72,6 @@ class SonoraChemAPIWrapper:
                     "Error validating API key. Contact us at denovochem.com/contact "
                     "to obtain an API key if you do not have one, or try again"
                 )
-
                 
     def _construct_headers(self) -> dict:
         """
@@ -157,10 +150,6 @@ class SonoraChemAPIWrapper:
             base_url (str): base url for the service to set.
         """
         self._base_url = base_url
-        self._sonora_chem_models_url = self._base_url + '/sonora_chem_models'
-        self._usage_url = self._base_url + '/get_usage'
-        self._monsoon_chem_url = self._base_url + '/monsoon_chem'
-        self._monsoon_chem_status_url = self._base_url + '/monsoon_chem_status'
 
     def set_api_key(self, api_key: str):
         """
@@ -198,7 +187,7 @@ class SonoraChemAPIWrapper:
         """
         input_data = {"api_key": self._api_key}
     
-        output_data = self._send_post_request(self._usage_url, self._headers, input_data)
+        output_data = self._send_post_request(self._base_url, self._headers, input_data)
     
         return output_data['body']
 
@@ -376,7 +365,7 @@ class SonoraChemAPIWrapper:
         post_request_data = {"input": post_request_data}
 
         start = time.time()
-        output_data = self._send_post_request(self._sonora_chem_models_url, self._headers, post_request_data)
+        output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
         returned_data = {
             'input': post_request_data['input'],
             'output': output_data['output'],
@@ -477,7 +466,7 @@ class SonoraChemAPIWrapper:
         post_request_data = {"input": post_request_data}
 
         start = time.time()
-        output_data = self._send_post_request(self._sonora_chem_models_url, self._headers, post_request_data)
+        output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
         returned_data = {
             'input': post_request_data['input'],
             'output': output_data['output'],
@@ -611,7 +600,7 @@ class SonoraChemAPIWrapper:
     
         post_request_data = {"input": post_request_data}
 
-        output_data = self._send_post_request(self._monsoon_chem_url, self._headers, post_request_data)
+        output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
     
         returned_data = {
             'input': post_request_data['input'],
@@ -715,7 +704,7 @@ class SonoraChemAPIWrapper:
                 "id": input_data["id"],
             }
     
-            output_data = self._send_post_request(self._monsoon_chem_status_url, self._headers, post_request_data)
+            output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
         
             response_status = output_data.json()['status']
     
