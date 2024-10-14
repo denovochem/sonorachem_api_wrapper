@@ -360,14 +360,14 @@ class SonoraChemAPIWrapper:
 
         start = time.time()
         output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
-        # returned_data = {
-        #     'input': post_request_data['input'],
-        #     'output': output_data['output'],
-        #     'status': output_data['status'],
-        #     'execution_time': time.time() - start
-        # }
+        returned_data = {
+            'input': post_request_data['input'],
+            'output': output_data['output'],
+            'status': output_data['status'],
+            'execution_time': time.time() - start
+        }
     
-        return output_data
+        return returned_data
 
     def _batch_predict(self, endpoint, input_data,  input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
