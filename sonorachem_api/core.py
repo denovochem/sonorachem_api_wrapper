@@ -59,6 +59,8 @@ class SonoraChemAPIWrapper:
             "endpoint": 'get_usage',
         }
 
+        post_request_data = {"input": post_request_data}
+
         response = self._send_post_request(self._base_url, self._headers, post_request_data)
         
         if 'statusCode' not in response:
