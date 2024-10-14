@@ -26,7 +26,7 @@ class SonoraChemAPIWrapper:
     def __init__(
         self,
         api_key: str,
-        base_url: Optional[str] = 'https://hwsvflxtqh.execute-api.us-east-2.amazonaws.com/denovochem_api_stage/runpod',
+        base_url: Optional[str] = 'https://hwsvflxtqh.execute-api.us-east-2.amazonaws.com/denovochem_api_stage/run',
     ):
         """
         SonoraChemAPIWrapper constructor.
