@@ -183,7 +183,7 @@ class SonoraChemAPIWrapper:
     
         output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
     
-        return output_data['body']
+        return output_data
 
     def is_valid_smiles(self, smiles):
         """
