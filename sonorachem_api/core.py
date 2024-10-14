@@ -62,18 +62,6 @@ class SonoraChemAPIWrapper:
         post_request_data = {"input": post_request_data}
 
         response = self._send_post_request(self._base_url, self._headers, post_request_data)
-        
-        if 'statusCode' not in response:
-            raise ValueError(
-                "Error validating API key. Contact us at denovochem.com/contact "
-                "to obtain an API key if you do not have one, or try again."
-            )
-        else:
-            if response['statusCode'] != 200:
-                raise ValueError(
-                    "Error validating API key. Contact us at denovochem.com/contact "
-                    "to obtain an API key if you do not have one, or try again"
-                )
                 
     def _construct_headers(self) -> dict:
         """
