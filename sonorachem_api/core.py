@@ -187,9 +187,13 @@ class SonoraChemAPIWrapper:
             HTTPError: If the request to the API fails.
             ValueError: If the response from the API is not in the expected format.
         """
-        input_data = {"api_key": self._api_key}
+        post_request_data = {
+            "endpoint": 'get_usage',
+        }
+
+        post_request_data = {"input": post_request_data}
     
-        output_data = self._send_post_request(self._base_url, self._headers, input_data)
+        output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
     
         return output_data['body']
 
