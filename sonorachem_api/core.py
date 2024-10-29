@@ -369,7 +369,7 @@ class SonoraChemAPIWrapper:
     
         return returned_data
 
-    def _batch_predict(self, endpoint, input_data,  input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def _batch_predict(self, endpoint, input_data,  input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Parent function to make batch predictions.
 
@@ -388,6 +388,7 @@ class SonoraChemAPIWrapper:
             temperature (float, optional): The temperature parameter for controlling randomness 
                 in sampling. Must be a positive float. Higher values increase randomness. 
                 Defaults to 1.0.
+            batch_size (int, optional): The batch size for batch inference. Defaults to 64.
 
         Returns:
             dict: A dictionary containing the input, output, status, and execution time.
@@ -401,6 +402,7 @@ class SonoraChemAPIWrapper:
               - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
               - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
               - If `temperature` is not a positive float.
+              - if `batch_size` is not an integer, or if it is not greater than 0 or exceeds 256.
               - If any element in `input_data` is not a valid SMILES string.
         """
         if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
@@ -431,6 +433,11 @@ class SonoraChemAPIWrapper:
         if temperature <= 0:
             raise ValueError("The 'temperature' argument must be a positive float.")
 
+        if not isinstance(batch_size, int):
+            raise TypeError("The 'batch_size' argument must be an integer.")
+        if seq_length <= 0 or batch_size > 256:
+            raise ValueError("The 'batch_size' argument must be greater than 0 and less than or equal to 256.")
+
         if input_data_type == 'smiles':
             for smiles in input_data:
                 valid_smiles = self.is_valid_smiles(smiles)
@@ -452,7 +459,8 @@ class SonoraChemAPIWrapper:
                     "sampling_method": sampling_method,
                     "seq_length": seq_length,
                     "beam_size": beam_size,
-                    "temperature": temperature
+                    "temperature": temperature,
+                    "batch_size": batch_size
                 }
             }
         }
@@ -476,11 +484,11 @@ class SonoraChemAPIWrapper:
         """
         return self._predict("procedures_retro_template_free", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-    def batch_predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def batch_predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict retrosynthetic procedures for SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_procedures_retro_template_free", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_procedures_retro_template_free", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature, batch_size)
 
     def predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
@@ -488,11 +496,11 @@ class SonoraChemAPIWrapper:
         """
         return self._predict("purification_protocols", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-    def batch_predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def batch_predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_purification_protocols", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_purification_protocols", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature, batch_size)
 
     def predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
@@ -500,11 +508,11 @@ class SonoraChemAPIWrapper:
         """
         return self._predict("forward_reaction", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-    def batch_predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def batch_predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict products given reactant SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_forward_reaction", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_forward_reaction", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature, batch_size)
 
     def predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
@@ -512,11 +520,11 @@ class SonoraChemAPIWrapper:
         """
         return self._predict("procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
 
-    def batch_predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def batch_predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._batch_predict("batch_procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature, batch_size)
 
     def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', output_data_format='zip', upload_to_external_storage=True):
         """
