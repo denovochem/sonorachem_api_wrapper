@@ -435,7 +435,7 @@ class SonoraChemAPIWrapper:
 
         if not isinstance(batch_size, int):
             raise TypeError("The 'batch_size' argument must be an integer.")
-        if seq_length <= 0 or batch_size > 256:
+        if batch_size <= 0 or batch_size > 256:
             raise ValueError("The 'batch_size' argument must be greater than 0 and less than or equal to 256.")
 
         if input_data_type == 'smiles':
