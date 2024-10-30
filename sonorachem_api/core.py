@@ -526,6 +526,12 @@ class SonoraChemAPIWrapper:
         """
         return self._batch_predict("batch_procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature, batch_size)
 
+    def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=10):
+        """
+        Child function to predict retrosynthetic procedures for a given reactants and products reaction SMILES string.
+        """
+        return self._predict("top_k_retro_templated", input_data, 'smiles', model_version, top_k)
+
     def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', output_data_format='zip', upload_to_external_storage=True):
         """
         Extracts reaction procedure JSONs from a list of text passages.
