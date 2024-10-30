@@ -528,9 +528,27 @@ class SonoraChemAPIWrapper:
 
     def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=10):
         """
-        Child function to predict retrosynthetic procedures for a given reactants and products reaction SMILES string.
+        Child function to predict top k most likely reactants from templates given a product.
         """
         return self._predict("top_k_retro_templated", input_data, 'smiles', model_version, top_k)
+
+    def retrieve_top_k_similar_reactions_rxn_smiles_template(self, input_data, model_version='latest', top_k=10):
+        """
+        Child function to retrieve top k most similar reactions given a reaction SMILES and template.
+        """
+        return self._predict("top_k_similar_reactions_rxn_smiles_template", input_data, 'smiles', model_version, top_k)
+
+    def retrieve_top_k_similar_reactions_rxn_smiles(self, input_data, model_version='latest', top_k=10):
+        """
+        Child function to retrieve top k most similar reactions given a reaction SMILES.
+        """
+        return self._predict("top_k_similar_reactions_rxn_smiles", input_data, 'smiles', model_version, top_k)
+
+    def retrieve_top_k_similar_reactions_reactants(self, input_data, model_version='latest', top_k=10):
+        """
+        Child function to retrieve top k most similar reactions given reactant SMILES.
+        """
+        return self._predict("top_k_similar_reactions_reactants", input_data, 'smiles', model_version, top_k)
 
     def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', output_data_format='zip', upload_to_external_storage=True):
         """
