@@ -627,11 +627,12 @@ class SonoraChemAPIWrapper:
         post_request_data = {"input": post_request_data}
 
         output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
+        print(output_data)
     
         returned_data = {
             'input': post_request_data['input'],
-            'job_id': output_data.json()['id'],
-            'status': output_data.json()['stats']
+            'job_id': output_data['id'],
+            'status': output_data['stats']
         }
         
         return returned_data
