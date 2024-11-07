@@ -604,12 +604,12 @@ class SonoraChemAPIWrapper:
         if not isinstance(model_version, str):
             raise TypeError("The 'model_version' argument must be a string.")
 
-        memory_file = io.BytesIO()
-        with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
-            zip_file.writestr('input_data.txt', input_data)
-        memory_file.seek(0)
-        zip_content = memory_file.getvalue()
-        input_data = base64.b64encode(zip_content).decode('utf-8')
+        # memory_file = io.BytesIO()
+        # with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
+        #     zip_file.writestr('input_data.txt', input_data)
+        # memory_file.seek(0)
+        # zip_content = memory_file.getvalue()
+        # input_data = base64.b64encode(zip_content).decode('utf-8')
     
         post_request_data = {
             "endpoint": "reaction_extraction",
