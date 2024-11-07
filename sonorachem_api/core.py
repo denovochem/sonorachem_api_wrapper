@@ -731,7 +731,7 @@ class SonoraChemAPIWrapper:
                 "endpoint": "check_reaction_extraction_status",
                 "data": {
                     "model_version": "extract_reaction_procedure_jsons_from_text",
-                    "input_data": input_data["id"],
+                    "input_data": input_data["job_id"],
                     "kwargs": {
                         "compress_input": True,
                         "output_data_format": 'zip',
@@ -741,6 +741,7 @@ class SonoraChemAPIWrapper:
             }
 
             post_request_data = {"input": post_request_data}
+            print(post_request_data)
     
             output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
             print(output_data)
