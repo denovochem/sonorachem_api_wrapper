@@ -632,7 +632,7 @@ class SonoraChemAPIWrapper:
         returned_data = {
             'input': post_request_data['input'],
             'job_id': output_data['id'],
-            'status': output_data['stats']
+            'status': output_data['status']
         }
         
         return returned_data
@@ -728,10 +728,20 @@ class SonoraChemAPIWrapper:
             """
 
             post_request_data = {
-                "id": input_data["id"],
+                "endpoint": "check_reaction_extraction_status",
+                "data": {
+                    "model_version": "extract_reaction_procedure_jsons_from_text",
+                    "input_data": input_data["id"],
+                    "kwargs": {
+                        "compress_input": True,
+                        "output_data_format": 'zip',
+                        "upload_to_external_storage": True
+                    }
+                }
             }
     
             output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
+            print(output_data)
         
             response_status = output_data.json()['status']
     
