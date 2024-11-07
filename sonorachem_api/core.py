@@ -739,6 +739,8 @@ class SonoraChemAPIWrapper:
                     }
                 }
             }
+
+            post_request_data = {"input": post_request_data}
     
             output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
             print(output_data)
