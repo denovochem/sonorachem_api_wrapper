@@ -742,6 +742,7 @@ class SonoraChemAPIWrapper:
             post_request_data = {"input": post_request_data}
     
             response = self._send_post_request(self._base_url, self._headers, post_request_data)
+            print(response)
             response_status = response['status']
     
             if wait_to_complete == True:
