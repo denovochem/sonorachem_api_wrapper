@@ -550,7 +550,7 @@ class SonoraChemAPIWrapper:
         """
         return self._predict("top_k_similar_reactions_reactants", input_data, 'smiles', model_version, top_k)
 
-    def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', output_data_format='zip', upload_to_external_storage=True):
+    def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', compress_input=True, output_data_format='zip', upload_to_external_storage=True):
         """
         Extracts reaction procedure JSONs from a list of text passages.
     
@@ -604,12 +604,13 @@ class SonoraChemAPIWrapper:
         if not isinstance(model_version, str):
             raise TypeError("The 'model_version' argument must be a string.")
 
-        # memory_file = io.BytesIO()
-        # with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
-        #     zip_file.writestr('input_data.txt', input_data)
-        # memory_file.seek(0)
-        # zip_content = memory_file.getvalue()
-        # input_data = base64.b64encode(zip_content).decode('utf-8')
+        if compress_input:            
+            memory_file = io.BytesIO()
+            with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
+                zip_file.writestr('input_data.txt', str(input_data))
+            memory_file.seek(0)
+            zip_content = memory_file.getvalue()
+            input_data = base64.b64encode(zip_content).decode('utf-8')
     
         post_request_data = {
             "endpoint": "reaction_extraction",
@@ -617,8 +618,8 @@ class SonoraChemAPIWrapper:
                 "model_version": model_version,
                 "input_data": input_data,
                 "kwargs": {
-                    "compress_input": True,
-                    "output_data_format": 'zip',
+                    "compress_input": compress_input,
+                    "output_data_format": output_data_format,
                     "upload_to_external_storage": upload_to_external_storage
                 }
             }
@@ -731,11 +732,7 @@ class SonoraChemAPIWrapper:
                 "data": {
                     "model_version": "latest",
                     "input_data": input_data["job_id"],
-                    "kwargs": {
-                        "compress_input": True,
-                        "output_data_format": 'zip',
-                        "upload_to_external_storage": True
-                    }
+                    "kwargs": {}
                 }
             }
 
