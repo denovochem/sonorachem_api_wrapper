@@ -741,23 +741,22 @@ class SonoraChemAPIWrapper:
 
             post_request_data = {"input": post_request_data}
     
-            output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
-        
-            response_status = output_data['status']
+            response = self._send_post_request(self._base_url, self._headers, post_request_data)
+            response_status = response['status']
     
             if wait_to_complete == True:
                 start = time.time()
                 try:
                     while response_status not in ['COMPLETED', 'FAILED'] and time.time()-start < timeout:
                         time.sleep(5)
-                        response = requests.post(status_url, 
-                                        headers=headers)
-                        response_status = response.json()['status']
+                        response = self._send_post_request(self._base_url, self._headers, post_request_data)
+                        response_status = response['status']
+                        
                 except KeyboardInterrupt:
                     print("\nInterrupted by user.")
     
                 if response_status == 'COMPLETED':
-                    output_data = self._process_completed_response(response.json())
+                    output_data = self._process_completed_response(response)
                     
                     returned_data = {
                         'status': response_status,
@@ -776,7 +775,7 @@ class SonoraChemAPIWrapper:
                 }
 
                 if response_status == 'COMPLETED':
-                    output_data = self._process_completed_response(response.json())
+                    output_data = self._process_completed_response(response)
                     returned_data['output'] = output_data
                     
             return returned_data
