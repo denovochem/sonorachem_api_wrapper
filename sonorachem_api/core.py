@@ -550,7 +550,7 @@ class SonoraChemAPIWrapper:
         """
         return self._predict("top_k_similar_reactions_reactants", input_data, 'smiles', model_version, top_k)
 
-    def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', compress_input=True, output_data_format='zip', upload_to_external_storage=True):
+    def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', compress_input=True, output_data_format='binary', upload_to_external_storage=True):
         """
         Extracts reaction procedure JSONs from a list of text passages.
     
@@ -570,7 +570,8 @@ class SonoraChemAPIWrapper:
                 Whether to compress the input_data before sending post request. Defaults to True. 
 
             output_data_format: str, optional
-                Format to return processed data. Must be one of XXXX
+                Format to return processed data. Must be one of 'raw_output' or 'binary'. Defaults
+                to 'binary'.
 
             upload_to_external_storage: bool, optional
                 Whether to upload the output data to external storage. Defaults to True. 
@@ -637,13 +638,14 @@ class SonoraChemAPIWrapper:
         
         return returned_data
 
-    def _process_completed_response(self, response):
+    def _process_completed_response(self, response, output_data_format='raw_output'):
         """
         Process a completed API response, extract and decode the ZIP content,
         and return the processed JSON data.
     
         Args:
             response (requests.Response): The API response object.
+            output_data_format (str): The requested output data format.
     
         Returns:
             dict: The processed JSON data.
@@ -653,19 +655,27 @@ class SonoraChemAPIWrapper:
         """
         if response['status'] != 'COMPLETED':
             raise ValueError("Response status is not COMPLETED")
-    
-        encoded_zip = response['output']
-        zip_content = base64.b64decode(encoded_zip)
-    
-        with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
-            temp_zip.write(zip_content)
-            temp_zip_path = temp_zip.name
-    
-        json_data = self._process_zip_file(temp_zip_path)
-    
-        Path(temp_zip_path).unlink()
+
+        if output_data_format == 'raw_output':
+            output_data = response['output']
+            
+        if output_data_format == 'binary':
+            encoded_zip = response['output']
+            zip_content = base64.b64decode(encoded_zip)
         
-        return list(json_data.values())
+            with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
+                temp_zip.write(zip_content)
+                temp_zip_path = temp_zip.name
+        
+            json_data = self._process_zip_file(temp_zip_path)
+        
+            Path(temp_zip_path).unlink()
+            output_data = list(json_data.values())
+
+        else:
+            output_data = {}
+        
+        return output_data
     
     def _process_zip_file(self, zip_path):
         """
@@ -727,11 +737,18 @@ class SonoraChemAPIWrapper:
                 
             """
 
+            top_level_input = input_data["input"]['data']
+            kwargs = top_level_input.get("kwargs", {})
+            compress_input = kwargs.get("compress_input", False)
+            output_data_format = kwargs.get("output_data_format", "binary")
+            upload_to_external_storage = kwargs.get("upload_to_external_storage", False)
+            job_id = input_data.get('job_id', None)
+
             post_request_data = {
                 "endpoint": "check_reaction_extraction_status",
                 "data": {
                     "model_version": "latest",
-                    "input_data": input_data["job_id"],
+                    "input_data": job_id,
                     "kwargs": {}
                 }
             }
@@ -753,7 +770,7 @@ class SonoraChemAPIWrapper:
                     ("\nInterrupted by user.")
     
                 if response_status == 'COMPLETED':
-                    output_data = self._process_completed_response(response)
+                    output_data = self._process_completed_response(response, output_data_format)
                     
                     returned_data = {
                         'status': response_status,
@@ -772,7 +789,7 @@ class SonoraChemAPIWrapper:
                 }
 
                 if response_status == 'COMPLETED':
-                    output_data = self._process_completed_response(response)
+                    output_data = self._process_completed_response(response, output_data_format)
                     returned_data['output'] = output_data
                     
             return returned_data
