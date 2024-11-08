@@ -673,7 +673,7 @@ class SonoraChemAPIWrapper:
             output_data = list(json_data.values())
 
         else:
-            output_data = {}
+            output_data = []
         
         return output_data
     
