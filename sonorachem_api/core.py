@@ -650,10 +650,10 @@ class SonoraChemAPIWrapper:
         Raises:
             ValueError: If the response status is not 'COMPLETED'.
         """
-        if response.json()['status'] != 'COMPLETED':
+        if response['status'] != 'COMPLETED':
             raise ValueError("Response status is not COMPLETED")
     
-        encoded_zip = response.json()['output']
+        encoded_zip = response['output']
         zip_content = base64.b64decode(encoded_zip)
     
         with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
