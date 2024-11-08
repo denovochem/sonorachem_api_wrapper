@@ -636,7 +636,7 @@ class SonoraChemAPIWrapper:
         
         return returned_data
 
-    def _process_completed_response(response):
+    def _process_completed_response(self, response):
         """
         Process a completed API response, extract and decode the ZIP content,
         and return the processed JSON data.
@@ -666,7 +666,7 @@ class SonoraChemAPIWrapper:
         
         return list(json_data.values())
     
-    def _process_zip_file(zip_path):
+    def _process_zip_file(self, zip_path):
         """
         Process a ZIP file and extract JSON data from all .txt files within it.
     
@@ -685,7 +685,7 @@ class SonoraChemAPIWrapper:
                     combined_json_data[file_name] = json_data
         return combined_json_data
     
-    def _process_text_file(archive, file_name):
+    def _process_text_file(self, archive, file_name):
         """
         Process a single text file within a ZIP archive.
     
