@@ -614,7 +614,7 @@ class SonoraChemAPIWrapper:
         post_request_data = {
             "endpoint": "reaction_extraction",
             "data": {
-                "model_version": "extract_reaction_procedure_jsons_from_text",
+                "model_version": model_version,
                 "input_data": input_data,
                 "kwargs": {
                     "compress_input": True,
