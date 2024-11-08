@@ -112,7 +112,7 @@ class SonoraChemAPIWrapper:
     
             response = requests.post(url, 
                                      headers=headers, 
-                                     json=data,  # Use json parameter for automatic JSON encoding
+                                     json=data,
                                      timeout=timeout, 
                                      verify=verify_ssl)
             
@@ -203,12 +203,12 @@ class SonoraChemAPIWrapper:
                 return False
             
             if any(atom.GetAtomMapNum() != 0 for atom in mol.GetAtoms()):
-                print("Warning: Atom mapping found and removed.")
+                ("Warning: Atom mapping found and removed.")
                 for atom in mol.GetAtoms():
                     atom.SetAtomMapNum(0)
             
             if any(atom.GetIsotope() != 0 for atom in mol.GetAtoms()):
-                print("Warning: Isotopes found and removed.")
+                ("Warning: Isotopes found and removed.")
                 for atom in mol.GetAtoms():
                     atom.SetIsotope(0)
             
@@ -216,7 +216,7 @@ class SonoraChemAPIWrapper:
             
             return True
         except Exception as e:
-            print(f"Error: {e}")
+            (f"Error: {e}")
             return False
 
     def is_valid_reaction_smiles(self, reaction_smiles):
@@ -238,25 +238,25 @@ class SonoraChemAPIWrapper:
             
             for mol in reaction.GetReactants():
                 if any(atom.GetAtomMapNum() != 0 for atom in mol.GetAtoms()):
-                    print("Warning: Atom mapping found and removed.")
+                    ("Warning: Atom mapping found and removed.")
                     for atom in mol.GetAtoms():
                         atom.SetAtomMapNum(0)
     
             for mol in reaction.GetProducts():
                 if any(atom.GetAtomMapNum() != 0 for atom in mol.GetAtoms()):
-                    print("Warning: Atom mapping found and removed.")
+                    ("Warning: Atom mapping found and removed.")
                     for atom in mol.GetAtoms():
                         atom.SetAtomMapNum(0)
             
             for mol in reaction.GetReactants():
                 if any(atom.GetIsotope() != 0 for atom in mol.GetAtoms()):
-                    print("Warning: Isotopes found and removed.")
+                    ("Warning: Isotopes found and removed.")
                     for atom in mol.GetAtoms():
                         atom.SetIsotope(0)
     
             for mol in reaction.GetProducts():
                 if any(atom.GetIsotope() != 0 for atom in mol.GetAtoms()):
-                    print("Warning: Isotopes found and removed.")
+                    ("Warning: Isotopes found and removed.")
                     for atom in mol.GetAtoms():
                         atom.SetIsotope(0)
             
@@ -267,7 +267,7 @@ class SonoraChemAPIWrapper:
             
             return True
         except Exception as e:
-            print(f"Error: {e}")
+            (f"Error: {e}")
             return False
 
     def _predict(self, endpoint, input_data, input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
@@ -742,7 +742,6 @@ class SonoraChemAPIWrapper:
             post_request_data = {"input": post_request_data}
     
             response = self._send_post_request(self._base_url, self._headers, post_request_data)
-            print(response)
             response_status = response['status']
     
             if wait_to_complete == True:
@@ -754,7 +753,7 @@ class SonoraChemAPIWrapper:
                         response_status = response['status']
                         
                 except KeyboardInterrupt:
-                    print("\nInterrupted by user.")
+                    ("\nInterrupted by user.")
     
                 if response_status == 'COMPLETED':
                     output_data = self._process_completed_response(response)
