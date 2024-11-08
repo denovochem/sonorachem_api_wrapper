@@ -719,7 +719,7 @@ class SonoraChemAPIWrapper:
             data and returns data based on user supplied inputs. 
         
             Parameters:
-                input_data : XXX
+                input_data : dict
                     The data returned from the asynchronus request to extract reaction data. 
     
                 wait_to_complete : bool, optional
