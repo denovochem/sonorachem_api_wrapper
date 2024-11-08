@@ -627,7 +627,6 @@ class SonoraChemAPIWrapper:
         post_request_data = {"input": post_request_data}
 
         output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
-        print(output_data)
     
         returned_data = {
             'input': post_request_data['input'],
@@ -730,7 +729,7 @@ class SonoraChemAPIWrapper:
             post_request_data = {
                 "endpoint": "check_reaction_extraction_status",
                 "data": {
-                    "model_version": "extract_reaction_procedure_jsons_from_text",
+                    "model_version": "latest",
                     "input_data": input_data["job_id"],
                     "kwargs": {
                         "compress_input": True,
@@ -741,12 +740,10 @@ class SonoraChemAPIWrapper:
             }
 
             post_request_data = {"input": post_request_data}
-            print(post_request_data)
     
             output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
-            print(output_data)
         
-            response_status = output_data.json()['status']
+            response_status = output_data['status']
     
             if wait_to_complete == True:
                 start = time.time()
