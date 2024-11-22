@@ -532,12 +532,6 @@ class SonoraChemAPIWrapper:
         """
         return self._predict("top_k_retro_templated", input_data, 'smiles', model_version, top_k)
 
-    def retrieve_top_k_similar_reactions_rxn_smiles_template(self, input_data, model_version='latest', top_k=10):
-        """
-        Child function to retrieve top k most similar reactions given a reaction SMILES and template.
-        """
-        return self._predict("top_k_similar_reactions_rxn_smiles_template", input_data, 'smiles', model_version, top_k)
-
     def retrieve_top_k_similar_reactions_rxn_smiles(self, input_data, model_version='latest', top_k=10):
         """
         Child function to retrieve top k most similar reactions given a reaction SMILES.
@@ -549,6 +543,12 @@ class SonoraChemAPIWrapper:
         Child function to retrieve top k most similar reactions given reactant SMILES.
         """
         return self._predict("top_k_similar_reactions_reactants", input_data, 'smiles', model_version, top_k)
+
+    def retrieve_top_k_similar_reactions_products(self, input_data, model_version='latest', top_k=10):
+        """
+        Child function to retrieve top k most similar reactions given a product SMILES.
+        """
+        return self._predict("top_k_similar_reactions_products", input_data, 'smiles', model_version, top_k)
 
     def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', compress_input=True, output_data_format='binary', upload_to_external_storage=True):
         """
