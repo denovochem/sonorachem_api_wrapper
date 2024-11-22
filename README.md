@@ -119,7 +119,7 @@ print(predictions['output'])
 
 ```python
 smiles = 'CC1=C(C=C(C=C1)C(=O)NC2=CC(=C(C=C2)CN3CCN(CC3)C)C(F)(F)F)C#CC4=CN=C5N4N=CC=C5'
-predictions = sonorachem_api_wrapper.top_k_retro_templated(smiles, k=16)
+predictions = sonorachem_api_wrapper.predict_top_k_retro_templated(smiles, k=16)
 
 print(predictions['output'])
 ```
@@ -130,13 +130,13 @@ print(predictions['output'])
 reaction_smiles = 'I[Cu].c1cc(P(c2ccccc2)c2ccccc2)ccc1.c1ccc(P(c2ccccc2)c2ccccc2)cc1.c1ccc(P(c2ccccc2)c2ccccc2)cc1.[Pd].c1c(P(c2ccccc2)c2ccccc2)cccc1.C(N(CC)CC)C.c1c(C)c(C#C)cc(C(Nc2ccc(CN3CCN(C)CC3)c(C(F)(F)F)c2)=O)c1.CCOC(=O)C.O.[Na+].[Cl-]>>CC1=C(C=C(C=C1)C(=O)NC2=CC(=C(C=C2)CN3CCN(CC3)C)C(F)(F)F)C#CC4=CN=C5N4N=CC=C5'
 
 # Search by full reaction
-predictions = sonorachem_api_wrapper.top_k_similar_reactions_rxn_smiles(reaction_smiles, k=16)
+predictions = sonorachem_api_wrapper.retrieve_top_k_similar_reactions_rxn_smiles(reaction_smiles, k=16)
 
 # Search by reactants
-predictions = sonorachem_api_wrapper.top_k_similar_reactions_reactants(reaction_smiles.split('>>')[0], k=16)
+predictions = sonorachem_api_wrapper.retrieve_top_k_similar_reactions_reactants(reaction_smiles.split('>>')[0], k=16)
 
 # Search by products
-predictions = sonorachem_api_wrapper.top_k_similar_reactions_products(reaction_smiles.split('>>')[1], k=16)
+predictions = sonorachem_api_wrapper.retrieve_top_k_similar_reactions_products(reaction_smiles.split('>>')[1], k=16)
 
 print(predictions['output'])
 ```
