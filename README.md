@@ -32,7 +32,12 @@ sonorachem_api_wrapper.get_api_usage()
 ### Chemical reaction extraction:
 
 ```python
-more info coming soon
+passages = ['example passage']
+response = sonorachem_api_wrapper.extract_reaction_procedure_jsons_from_text(passages)
+print(response)
+
+completed_extraction = sonorachem_api_wrapper.check_status_extract_reaction_procedure_jsons_from_text(response)
+print(completed_extraction)
 ```
 
 ### Forward reaction prediction:
