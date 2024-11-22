@@ -118,7 +118,6 @@ print(predictions['output'])
 ### One-step templated retrosynthesis prediction:
 
 ```python
-# Single input inference:
 smiles = 'CC1=C(C=C(C=C1)C(=O)NC2=CC(=C(C=C2)CN3CCN(CC3)C)C(F)(F)F)C#CC4=CN=C5N4N=CC=C5'
 predictions = sonorachem_api_wrapper.top_k_retro_templated(smiles, k=16)
 
