@@ -270,7 +270,106 @@ class SonoraChemAPIWrapper:
             (f"Error: {e}")
             return False
 
-    def _predict(self, endpoint, input_data, input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+    def _verify_kwargs(self, input_data, input_data_type='smiles', model_version='latest', kwargs={}, batched=False):
+        """
+        Verifies and validates the input arguments and keyword arguments for the model.
+        
+        Args:
+            input_data (str or list): The input data to be processed. If `batched` is True, 
+                this should be a list of strings. Otherwise, it should be a single string.
+            input_data_type (str, optional): The type of input data. Must be one of 'smiles' 
+                or 'rxn_smiles'. Defaults to 'smiles'.
+            model_version (str, optional): The version of the model to be used. 
+                Defaults to 'latest'.
+            kwargs (dict, optional): Additional keyword arguments for the model. 
+                Defaults to {}.
+            batched (bool, optional): If True, the input data is expected to be a list 
+                of strings. Defaults to False.
+        
+        Returns:
+            None
+        
+        Raises:
+            TypeError: 
+                - If any of the input arguments or keyword arguments have incorrect types.
+            ValueError: 
+                - If any of the input arguments or keyword arguments have invalid values.
+        """
+    
+        sampling_method = kwargs.get('sampling_method', 'greedy')
+        seq_length = kwargs.get('seq_length', 256)
+        beam_size = kwargs.get('beam_size', 5)
+        temperature = kwargs.get('temperature', 0.3)
+        top_k = kwargs.get('top_k', 16)
+        batch_size = kwargs.get('batch_size', 16)
+    
+        if batched:
+            if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
+                raise TypeError("The 'input_data' argument must be a list of strings.")
+            
+            if not isinstance(batch_size, int):
+                raise TypeError("The 'batch_size' argument must be an integer.")
+            if batch_size <= 0 or batch_size > 256:
+                raise ValueError("The 'batch_size' argument must be greater than 0 and less than or equal to 256.")
+        
+            if input_data_type == 'smiles':
+                for smiles in input_data:
+                    valid_smiles = self.is_valid_smiles(smiles)
+                    if not valid_smiles:
+                        raise ValueError(f"The SMILES string '{smiles}' is not valid.")
+                        
+            elif input_data_type == 'rxn_smiles':
+                for rxn_smiles in input_data:
+                    valid_rxn_smiles = self.is_valid_reaction_smiles(rxn_smiles)
+                    if not valid_rxn_smiles:
+                        raise ValueError(f"The reaction SMILES string '{rxn_smiles}' is not valid.")
+    
+        else:  
+            if not isinstance(input_data, str):
+                raise TypeError("The 'input_data' argument must be a string.")
+    
+            if input_data_type == 'smiles':
+                valid_smiles = self.is_valid_smiles(input_data)
+                if not valid_smiles:
+                    raise ValueError("The 'input_data' argument is not a valid SMILES string.")
+                        
+            elif input_data_type == 'rxn_smiles':
+                valid_rxn_smiles = self.is_valid_reaction_smiles(input_data)
+                if not valid_rxn_smiles:
+                    raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
+                
+        if input_data_type not in ['smiles', 'rxn_smiles']:
+            raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
+    
+        if not isinstance(model_version, str):
+            raise TypeError("The 'model_version' argument must be a string.")
+        
+        if sampling_method not in ['top_k', 'greedy', 'sampling']:
+            raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
+    
+        if not isinstance(seq_length, int):
+            raise TypeError("The 'seq_length' argument must be an integer.")
+        if seq_length <= 0 or seq_length > 512:
+            raise ValueError("The 'seq_length' argument must be greater than 0 and less than or equal to 512.")
+        
+        if not isinstance(beam_size, int):
+            raise TypeError("The 'beam_size' argument must be an integer.")
+        if beam_size <= 0 or beam_size > 16:
+            raise ValueError("The 'beam_size' argument must be greater than 0 and less than or equal to 16.")
+        if beam_size == 1:
+            sampling_method = 'greedy'
+
+        if not isinstance(temperature, (int, float)):
+            raise TypeError("The 'temperature' argument must be an integer or a float.")
+        if temperature <= 0:
+            raise ValueError("The 'temperature' argument must be positive.")
+    
+        if not isinstance(top_k, int):
+            raise TypeError("The 'top_k' argument must be an integer.")
+        if top_k <= 0 or top_k > 128:
+            raise ValueError("The 'top_k' argument must be greater than 0 and less than or equal to 128.")
+                
+    def _predict(self, endpoint, input_data, input_data_type='smiles', model_version='latest', kwargs={}):
         """
         Parent function to make a prediction.
 
@@ -280,79 +379,24 @@ class SonoraChemAPIWrapper:
             input_data_type (str, optional): The input data type used for input validation. 
                 Must be one of 'smiles' or 'rxn_smiles'. Defaults to 'smiles'.
             model_version (str, optional): The version of the model to use. Defaults to 'latest'.
-            sampling_method (str, optional): The method used for sampling predictions. 
-                Must be one of 'top_k', 'greedy', or 'sampling'. Defaults to 'greedy'.
-            seq_length (int, optional): The maximum sequence length for the model input. 
-                Defaults to 512.
-            beam_size (int, optional): The beam size for beam search (if applicable). 
-                Defaults to 5.
-            temperature (float, optional): The temperature parameter for controlling randomness 
-                in sampling. Must be a positive float. Higher values increase randomness. 
-                Defaults to 1.0.
+            kwargs (dict, optional): Arguments for predictions.
 
         Returns:
             dict: A dictionary containing the input, output, status, and execution time.
 
         Raises:
             ValueError: 
-              - If `input_data` is not a string.
-              - If `model_version` is not a string.
-              - If `input_data_type` is not one of 'smiles', 'rxn_smiles'.
-              - If `sampling_method` is not one of 'top_k', 'greedy', or 'sampling'.
-              - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
-              - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
-              - If `temperature` is not a positive float.
-              - if `input_data` is not a valid SMILES string.
+              - If arguments cannot be validated by _verify_kwargs.
         """
-        if not isinstance(input_data, str):
-            raise TypeError("The 'input_data' argument must be a string.")
-            
-        if input_data_type not in ['smiles', 'rxn_smiles']:
-            raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
 
-        if not isinstance(model_version, str):
-            raise TypeError("The 'model_version' argument must be a string.")
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
         
-        if sampling_method not in ['top_k', 'greedy', 'sampling']:
-            raise ValueError("Invalid sampling method. Must be 'top_k', 'greedy', or 'sampling'.")
-
-        if not isinstance(seq_length, int):
-            raise TypeError("The 'seq_length' argument must be an integer.")
-        if seq_length <= 0 or seq_length > 512:
-            raise ValueError("The 'seq_length' argument must be greater than 0 and less than or equal to 512.")
-    
-        if not isinstance(beam_size, int):
-            raise TypeError("The 'beam_size' argument must be an integer.")
-        if beam_size <= 0 or beam_size > 16:
-            raise ValueError("The 'beam_size' argument must be greater than 0 and less than or equal to 16.")
-        
-        if beam_size == 1:
-            sampling_method = 'greedy'
-        
-        if temperature <= 0:
-            raise ValueError("The 'temperature' argument must be a positive float.")
-
-        if input_data_type == 'smiles':
-            valid_smiles = self.is_valid_smiles(input_data)
-            if not valid_smiles:
-                raise ValueError("The 'input_data' argument is not a valid SMILES string.")
-                
-        if input_data_type == 'rxn_smiles':
-            valid_rxn_smiles = self.is_valid_reaction_smiles(input_data)
-            if not valid_rxn_smiles:
-                raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
-
         post_request_data = {
             "endpoint": endpoint,
             "data": {
                 "model_version": model_version,
                 "input_data": input_data,
-                "kwargs": {
-                    "sampling_method": sampling_method,
-                    "seq_length": seq_length,
-                    "beam_size": beam_size,
-                    "temperature": temperature
-                }
+                "kwargs": kwargs
             }
         }
 
@@ -369,7 +413,7 @@ class SonoraChemAPIWrapper:
     
         return returned_data
 
-    def _batch_predict(self, endpoint, input_data,  input_data_type='smiles', model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
+    def _batch_predict(self, endpoint, input_data,  input_data_type='smiles', model_version='latest', kwargs={}, batch_size=64):
         """
         Parent function to make batch predictions.
 
@@ -379,15 +423,7 @@ class SonoraChemAPIWrapper:
             input_data_type (str, optional): The input data type used for input validation. 
                 Must be one of 'smiles' or 'rxn_smiles'. Defaults to 'smiles'.
             model_version (str, optional): The version of the model to use. Defaults to 'latest'.
-            sampling_method (str, optional): The method used for sampling predictions. 
-                Must be one of 'greedy', or 'sampling'. Defaults to 'greedy'.
-            seq_length (int, optional): The maximum sequence length for the model input. 
-                Defaults to 512.
-            beam_size (int, optional): The beam size for beam search (if applicable). 
-                Defaults to 5.
-            temperature (float, optional): The temperature parameter for controlling randomness 
-                in sampling. Must be a positive float. Higher values increase randomness. 
-                Defaults to 1.0.
+            kwargs (dict, optional): Arguments for predictions.
             batch_size (int, optional): The batch size for batch inference. Defaults to 64.
 
         Returns:
@@ -395,73 +431,19 @@ class SonoraChemAPIWrapper:
 
         Raises:
             ValueError: 
-              - If `input_data` is not a list of strings.
-              - If `input_data_type` is not one of 'smiles', 'rxn_smiles'.
-              - If `model_version` is not a string.
-              - If `sampling_method` is not one of 'greedy', or 'sampling'.
-              - If `seq_length` is not an integer, or if it is not greater than 0 or exceeds 512.
-              - If `beam_size` is not an integer, or if it is not greater than 0 or exceeds 16.
-              - If `temperature` is not a positive float.
-              - if `batch_size` is not an integer, or if it is not greater than 0 or exceeds 256.
-              - If any element in `input_data` is not a valid SMILES string.
+              - If arguments cannot be validated by _verify_kwargs.
         """
-        if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
-            raise TypeError("The 'input_data' argument must be a list of strings.")
 
-        if input_data_type not in ['smiles', 'rxn_smiles']:
-            raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
+        kwargs["batch_size"] = batch_size
 
-        if not isinstance(model_version, str):
-            raise TypeError("The 'model_version' argument must be a string.")
-
-        if sampling_method not in ['greedy', 'sampling']:
-            raise ValueError("Invalid sampling method. Must be 'greedy', or 'sampling'.")
-
-        if not isinstance(seq_length, int):
-            raise TypeError("The 'seq_length' argument must be an integer.")
-        if seq_length <= 0 or seq_length > 512:
-            raise ValueError("The 'seq_length' argument must be greater than 0 and less than or equal to 512.")
-
-        if not isinstance(beam_size, int):
-            raise TypeError("The 'beam_size' argument must be an integer.")
-        if beam_size <= 0 or beam_size > 16:
-            raise ValueError("The 'beam_size' argument must be greater than 0 and less than or equal to 16.")
-
-        if beam_size == 1:
-            sampling_method = 'greedy'
-
-        if temperature <= 0:
-            raise ValueError("The 'temperature' argument must be a positive float.")
-
-        if not isinstance(batch_size, int):
-            raise TypeError("The 'batch_size' argument must be an integer.")
-        if batch_size <= 0 or batch_size > 256:
-            raise ValueError("The 'batch_size' argument must be greater than 0 and less than or equal to 256.")
-
-        if input_data_type == 'smiles':
-            for smiles in input_data:
-                valid_smiles = self.is_valid_smiles(smiles)
-                if not valid_smiles:
-                    raise ValueError(f"The SMILES string '{smiles}' is not valid.")
-                
-        if input_data_type == 'rxn_smiles':
-            for rxn_smiles in input_data:
-                valid_rxn_smiles = self.is_valid_reaction_smiles(rxn_smiles)
-                if not valid_rxn_smiles:
-                    raise ValueError(f"The reaction SMILES string '{rxn_smiles}' is not valid.")
-
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=True)
+        
         post_request_data = {
             "endpoint": endpoint,
             "data": {
                 "model_version": model_version,
                 "input_data": input_data,
-                "kwargs": {
-                    "sampling_method": sampling_method,
-                    "seq_length": seq_length,
-                    "beam_size": beam_size,
-                    "temperature": temperature,
-                    "batch_size": batch_size
-                }
+                "kwargs": kwargs
             }
         }
 
@@ -482,73 +464,73 @@ class SonoraChemAPIWrapper:
         """
         Child function to predict retrosynthetic procedures for a given SMILES string using a template-free approach.
         """
-        return self._predict("procedures_retro_template_free", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._predict("procedures_retro_template_free", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
 
     def batch_predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict retrosynthetic procedures for SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_procedures_retro_template_free", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature, batch_size)
+        return self._batch_predict("batch_procedures_retro_template_free", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
 
     def predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict purification procedures for a given reaction SMILES string.
         """
-        return self._predict("purification_protocols", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._predict("purification_protocols", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
 
     def batch_predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_purification_protocols", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature, batch_size)
+        return self._batch_predict("batch_purification_protocols", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
 
     def predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict a product given a reactant SMILES string using a template-free approach.
         """
-        return self._predict("forward_reaction", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._predict("forward_reaction", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
 
     def batch_predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict products given reactant SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_forward_reaction", input_data, 'smiles', model_version, sampling_method, seq_length, beam_size, temperature, batch_size)
+        return self._batch_predict("batch_forward_reaction", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
 
     def predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict retrosynthetic procedures for a given reactants and products reaction SMILES string.
         """
-        return self._predict("procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature)
+        return self._predict("procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
 
     def batch_predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_procedures_given_reactants_products", input_data, 'rxn_smiles', model_version, sampling_method, seq_length, beam_size, temperature, batch_size)
+        return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
 
-    def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=10):
+    def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=16):
         """
         Child function to predict top k most likely reactants from templates given a product.
         """
-        return self._predict("top_k_retro_templated", input_data, 'smiles', model_version, top_k)
+        return self._predict("top_k_retro_templated", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k})
 
-    def retrieve_top_k_similar_reactions_rxn_smiles(self, input_data, model_version='latest', top_k=10):
+    def retrieve_top_k_similar_reactions_rxn_smiles(self, input_data, model_version='latest', top_k=16):
         """
         Child function to retrieve top k most similar reactions given a reaction SMILES.
         """
-        return self._predict("top_k_similar_reactions_rxn_smiles", input_data, 'smiles', model_version, top_k)
+        return self._predict("top_k_similar_reactions_rxn_smiles", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k})
 
-    def retrieve_top_k_similar_reactions_reactants(self, input_data, model_version='latest', top_k=10):
+    def retrieve_top_k_similar_reactions_reactants(self, input_data, model_version='latest', top_k=16):
         """
         Child function to retrieve top k most similar reactions given reactant SMILES.
         """
-        return self._predict("top_k_similar_reactions_reactants", input_data, 'smiles', model_version, top_k)
+        return self._predict("top_k_similar_reactions_reactants", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k})
 
-    def retrieve_top_k_similar_reactions_products(self, input_data, model_version='latest', top_k=10):
+    def retrieve_top_k_similar_reactions_products(self, input_data, model_version='latest', top_k=16):
         """
         Child function to retrieve top k most similar reactions given a product SMILES.
         """
-        return self._predict("top_k_similar_reactions_products", input_data, 'smiles', model_version, top_k)
+        return self._predict("top_k_similar_reactions_products", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k})
 
     def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', compress_input=True, output_data_format='binary', upload_to_external_storage=True):
         """
