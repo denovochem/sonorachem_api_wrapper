@@ -514,23 +514,23 @@ class SonoraChemAPIWrapper:
         """
         return self._predict("top_k_retro_templated", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k})
 
-    def retrieve_top_k_similar_reactions_rxn_smiles(self, input_data, model_version='latest', top_k=16):
+    def retrieve_top_k_similar_reactions_rxn_smiles(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
         """
         Child function to retrieve top k most similar reactions given a reaction SMILES.
         """
-        return self._predict("top_k_similar_reactions_rxn_smiles", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'top_k': top_k})
+        return self._predict("top_k_similar_reactions_rxn_smiles", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
-    def retrieve_top_k_similar_reactions_reactants(self, input_data, model_version='latest', top_k=16):
+    def retrieve_top_k_similar_reactions_reactants(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
         """
         Child function to retrieve top k most similar reactions given reactant SMILES.
         """
-        return self._predict("top_k_similar_reactions_reactants", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k})
+        return self._predict("top_k_similar_reactions_reactants", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
-    def retrieve_top_k_similar_reactions_products(self, input_data, model_version='latest', top_k=16):
+    def retrieve_top_k_similar_reactions_products(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
         """
         Child function to retrieve top k most similar reactions given a product SMILES.
         """
-        return self._predict("top_k_similar_reactions_products", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k})
+        return self._predict("top_k_similar_reactions_products", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
     def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', compress_input=True, output_data_format='binary', upload_to_external_storage=True):
         """
