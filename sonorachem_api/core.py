@@ -518,7 +518,7 @@ class SonoraChemAPIWrapper:
         """
         Child function to retrieve top k most similar reactions given a reaction SMILES.
         """
-        return self._predict("top_k_similar_reactions_rxn_smiles", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k})
+        return self._predict("top_k_similar_reactions_rxn_smiles", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'top_k': top_k})
 
     def retrieve_top_k_similar_reactions_reactants(self, input_data, model_version='latest', top_k=16):
         """
