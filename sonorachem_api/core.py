@@ -302,6 +302,9 @@ class SonoraChemAPIWrapper:
         temperature = kwargs.get('temperature', 0.3)
         top_k = kwargs.get('top_k', 16)
         batch_size = kwargs.get('batch_size', 16)
+
+        if input_data_type not in ['smiles', 'rxn_smiles']:
+            raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
     
         if batched:
             if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
@@ -337,9 +340,6 @@ class SonoraChemAPIWrapper:
                 valid_rxn_smiles = self.is_valid_reaction_smiles(input_data)
                 if not valid_rxn_smiles:
                     raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
-                
-        if input_data_type not in ['smiles', 'rxn_smiles']:
-            raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
     
         if not isinstance(model_version, str):
             raise TypeError("The 'model_version' argument must be a string.")
