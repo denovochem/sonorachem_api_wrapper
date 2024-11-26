@@ -464,49 +464,49 @@ class SonoraChemAPIWrapper:
         """
         Child function to predict retrosynthetic procedures for a given SMILES string using a template-free approach.
         """
-        return self._predict("procedures_retro_template_free", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
+        return self._predict("procedures_retro_template_free", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def batch_predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict retrosynthetic procedures for SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_procedures_retro_template_free", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
+        return self._batch_predict("batch_procedures_retro_template_free", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict purification procedures for a given reaction SMILES string.
         """
-        return self._predict("purification_protocols", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
+        return self._predict("purification_protocols", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def batch_predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_purification_protocols", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
+        return self._batch_predict("batch_purification_protocols", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict a product given a reactant SMILES string using a template-free approach.
         """
-        return self._predict("forward_reaction", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
+        return self._predict("forward_reaction", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def batch_predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict products given reactant SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_forward_reaction", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
+        return self._batch_predict("batch_forward_reaction", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict retrosynthetic procedures for a given reactants and products reaction SMILES string.
         """
-        return self._predict("procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
+        return self._predict("procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def batch_predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': 'sampling_method', 'seq_length': 'seq_length', 'beam_size': 'beam_size', 'temperature': 'temperature'})
+        return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=16):
         """
