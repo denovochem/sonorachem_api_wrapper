@@ -510,7 +510,7 @@ class SonoraChemAPIWrapper:
         """
         return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
-    def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=16):
+    def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
         """
         Child function to predict top k most likely reactants from templates given a product.
         """
