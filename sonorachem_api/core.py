@@ -514,7 +514,7 @@ class SonoraChemAPIWrapper:
         """
         Child function to predict top k most likely reactants from templates given a product.
         """
-        return self._predict("top_k_retro_templated", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k})
+        return self._predict("top_k_retro_templated", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
     def retrieve_top_k_similar_reactions_rxn_smiles(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
         """
