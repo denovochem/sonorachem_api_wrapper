@@ -749,8 +749,7 @@ class SonoraChemAPIWrapper:
                         response_status = response['status']
                         
                 except KeyboardInterrupt:
-                    print("\nInterrupted by user.")
-                    break
+                    raise Exception("\nInterrupted by user.")
     
                 if response_status == 'COMPLETED':
                     output_data = self._process_completed_response(response, output_data_format)
