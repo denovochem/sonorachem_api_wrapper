@@ -1,6 +1,5 @@
 import random
 import re
-import tensorflow as tf
 from rdkit import Chem
 from rdkit import RDLogger
 import logging
