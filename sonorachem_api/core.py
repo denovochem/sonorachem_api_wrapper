@@ -395,6 +395,7 @@ class SonoraChemAPIWrapper:
             "endpoint": endpoint,
             "data": {
                 "model_version": model_version,
+                "batched": False,
                 "input_data": input_data,
                 "kwargs": kwargs
             }
@@ -443,6 +444,7 @@ class SonoraChemAPIWrapper:
             "data": {
                 "model_version": model_version,
                 "input_data": input_data,
+                "batched": True,
                 "kwargs": kwargs
             }
         }
