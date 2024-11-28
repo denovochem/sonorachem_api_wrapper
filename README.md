@@ -32,7 +32,16 @@ sonorachem_api_wrapper.get_api_usage()
 ### Chemical reaction extraction:
 
 ```python
-passages = ['example passage']
+passages = ['''
+<p> EXAMPLE 134 </p> <p> 2-[3-[2-(2-Aminothiazol-5-yl)ethoxycarbonylamino]-2-oxo-6-phenyl-1,2-dihydr o-1-pyridyl]-N-
+(3,3,3-trifluoro-1-isopropyl-2-oxopropyl)acetamide. </p> <p> To 2-[3-[2-(2-tert-butoxycarbonylaminothiazol-5-yl)
+ethoxycarbonylamino]-2-oxo -6-phenyl-1,2-dihydro-1-pyridyl]-N-(3,3,3-trifluoro-1-isopropyl-2-oxopropyl )acetamide (0.9 g)
+in methylene chloride (5 mL) was added trifluoroacetic acid (1 mL), and the resulting solution was allowed to stir
+for 3 h. The solvents were evaporated and the residue chromatographed, eluting with methanol:methylene chloride
+(5:95), to give the title compound (0.46 g); MS: m/z=566(M+1). </p>
+'''
+]
+
 response = sonorachem_api_wrapper.extract_reaction_procedure_jsons_from_text(passages)
 print(response)
 
