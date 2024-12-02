@@ -510,11 +510,11 @@ class SonoraChemAPIWrapper:
         """
         return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
-    def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
+    def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=16, rerank_by_reactants=True, use_saguarochem=True, use_custom_data=False):
         """
         Child function to predict top k most likely reactants from templates given a product.
         """
-        return self._predict("top_k_retro_templated", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
+        return self._predict("top_k_retro_templated", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k, 'rerank': rerank_by_reactants, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
     def retrieve_top_k_similar_reactions_rxn_smiles(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
         """
