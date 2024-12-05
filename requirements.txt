@@ -1,2 +1,2 @@
-rdkit-pypi>=2021.03.2
+rdkit
 requests<3.0.0,>=2.23.0
