@@ -605,19 +605,17 @@ class SonoraChemAPIWrapper:
         WORDS_TO_CHECK_PATTERN = r'(?i)(?<=\d)(?:' + '|'.join(re.escape(word) for word in WORDS_TO_CHECK) + r')(?=\W|$)'
     
         doc = fitz.open(pdf_path)
-        all_blocks = []
         pages_that_may_contain_synthetic_procedures = []
     
         for page_num in range(len(doc)):
             page = doc[page_num]
             blocks = page.get_text("blocks")
-            page_blocks = [block[4] for block in blocks]
+            page_blocks = [block[4] for block in blocks if block[6] == 0]
             joined_blocks = '\n'.join(page_blocks)
     
             if re.search(WORDS_TO_CHECK_PATTERN, joined_blocks.lower()):
                 if any(word in joined_blocks.lower() for word in MUST_INCLUDE):
                     pages_that_may_contain_synthetic_procedures.append(page_num)
-            all_blocks.append(joined_blocks)
     
         consecutive_runs = find_consecutive_runs_with_padding(pages_that_may_contain_synthetic_procedures, len(doc))
     
@@ -756,13 +754,8 @@ class SonoraChemAPIWrapper:
         if not isinstance(model_version, str):
             raise TypeError("The 'model_version' argument must be a string.")
 
-        if compress_input:            
-            memory_file = io.BytesIO()
-            with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
-                zip_file.writestr('input_data.txt', str(input_data))
-            memory_file.seek(0)
-            zip_content = memory_file.getvalue()
-            input_data = base64.b64encode(zip_content).decode('utf-8')
+        if compress_input:  
+            input_data = self._compress_data(input_data)
     
         post_request_data = {
             "endpoint": "reaction_extraction",
@@ -811,17 +804,7 @@ class SonoraChemAPIWrapper:
             output_data = response['output']
             
         if output_data_format == 'binary':
-            encoded_zip = response['output']
-            zip_content = base64.b64decode(encoded_zip)
-        
-            with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
-                temp_zip.write(zip_content)
-                temp_zip_path = temp_zip.name
-        
-            json_data = self._process_zip_file(temp_zip_path)
-        
-            Path(temp_zip_path).unlink()
-            output_data = list(json_data.values())
+            output_data = self._decompress_data(response['output'])
 
         else:
             output_data = []
@@ -861,6 +844,67 @@ class SonoraChemAPIWrapper:
         with archive.open(file_name) as text_file:
             content = text_file.read().decode('utf-8')
         return ''.join(content.splitlines())
+
+    def _compress_data(input_data):
+        """
+        Compresses input data using ZIP compression and encodes it in base64.
+    
+        Args:
+            input_data: The data to be compressed (can be any type that can be converted to string)
+    
+        Returns:
+            str: Base64 encoded string of the compressed data
+        """
+        try:
+            memory_file = io.BytesIO()
+            
+            with zipfile.ZipFile(memory_file, 'w', compression=zipfile.ZIP_DEFLATED) as zip_file:
+                zip_file.writestr('input_data.txt', str(input_data))
+            
+            memory_file.seek(0)
+            zip_content = memory_file.getvalue()
+            compressed_data = base64.b64encode(zip_content).decode('utf-8')
+            
+            return compressed_data
+        
+        except Exception as e:
+            raise Exception(f"Error compressing data: {str(e)}")
+        
+        finally:
+            memory_file.close()
+
+    def _decompress_data(encoded_zip: str) -> List[Any]:
+        """
+        Decompresses a base64 encoded ZIP string back into its original data.
+    
+        Args:
+            encoded_zip (str): Base64 encoded string containing compressed ZIP data
+    
+        Returns:
+            List[Any]: List containing the decompressed data
+    
+        Raises:
+            Exception: If there's an error during decompression or file processing
+        """
+        temp_zip_path = None
+        try:
+            zip_content = base64.b64decode(encoded_zip)
+            
+            with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
+                temp_zip.write(zip_content)
+                temp_zip_path = temp_zip.name
+            
+            json_data = _process_zip_file(temp_zip_path)
+            output_data = list(json_data.values())
+            
+            return output_data
+    
+        except Exception as e:
+            raise Exception(f"Error decompressing data: {str(e)}")
+        
+        finally:
+            if temp_zip_path and Path(temp_zip_path).exists():
+                Path(temp_zip_path).unlink()
 
     def check_status_extract_reaction_procedure_jsons_from_text(self, input_data, wait_to_complete = True, timeout = 1800):
             """
