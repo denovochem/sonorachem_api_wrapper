@@ -16,6 +16,7 @@ RDLogger.DisableLog('rdApp.*')
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+from typing import List, Any
 
 from .utils import randomize_smiles, randomize_reaction_smiles
 
