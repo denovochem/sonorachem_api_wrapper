@@ -607,12 +607,14 @@ class SonoraChemAPIWrapper:
     
         doc = fitz.open(pdf_path)
         pages_that_may_contain_synthetic_procedures = []
-    
+
+        all_blocks = []
         for page_num in range(len(doc)):
             page = doc[page_num]
             blocks = page.get_text("blocks")
             page_blocks = [block[4] for block in blocks if block[6] == 0]
             joined_blocks = '\n'.join(page_blocks)
+            all_blocks.append(joined_blocks)
     
             if re.search(WORDS_TO_CHECK_PATTERN, joined_blocks.lower()):
                 if any(word in joined_blocks.lower() for word in MUST_INCLUDE):
