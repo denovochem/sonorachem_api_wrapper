@@ -464,7 +464,7 @@ class SonoraChemAPIWrapper:
     
         return returned_data
 
-    def extract_text_from_pdf(pdf_path):
+    def extract_text_from_pdf(self, pdf_path):
         """
         Extracts text from a PDF document, focusing on pages that are most likely to have synthetic content.
         
