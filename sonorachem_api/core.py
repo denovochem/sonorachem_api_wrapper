@@ -464,46 +464,67 @@ class SonoraChemAPIWrapper:
     
         return returned_data
 
-    def extract_reaction_jsons_from_pdf_paths(self, pdf_paths):
+    def extract_reaction_jsons_from_pdf_paths(self, pdf_paths, compress_input=False, 
+                                        model_version="latest", output_data_format="default",
+                                        upload_to_external_storage=False):
+    """
+    Extracts reaction information from PDF files and converts them to JSON format.
 
-        if not isinstance(pdf_paths, list) or not all(isinstance(item, str) for item in pdf_paths):
-            raise TypeError("The 'pdf_paths' argument must be a list of strings.")
+    Args:
+        pdf_paths (list): A list of strings containing file paths to PDF documents.
+        compress_input (bool, optional): Whether to compress the input data. Defaults to False.
+        model_version (str, optional): Version of the model to use. Defaults to "latest".
+        output_data_format (str, optional): Format of the output data. Defaults to "default".
+        upload_to_external_storage (bool, optional): Whether to upload results to external storage. 
+            Defaults to False.
 
-        if len(pdf_paths) > 100:
-            raise ValueError("The 'pdf_paths' argument must not have more than 100 elements.")
+    Returns:
+        dict: A dictionary containing:
+            - input: The original post request data
+            - job_id: The ID of the processing job
+            - status: The current status of the job
 
-        extracted_pdf_dict = {}
-        for i, pdf_path in enumerate(pdf_paths):
-            extracted_pdf_dict[i] = extract_text_from_pdf(pdf_path)
-            
-        
-        if compress_input:  
-            input_data = self._compress_data(extracted_pdf_dict)
+    Raises:
+        TypeError: If pdf_paths is not a list of strings.
+        ValueError: If pdf_paths contains more than 100 elements.
+    """
+    if not isinstance(pdf_paths, list) or not all(isinstance(item, str) for item in pdf_paths):
+        raise TypeError("The 'pdf_paths' argument must be a list of strings.")
+
+    if len(pdf_paths) > 100:
+        raise ValueError("The 'pdf_paths' argument must not have more than 100 elements.")
+
+    extracted_pdf_dict = {}
+    for i, pdf_path in enumerate(pdf_paths):
+        extracted_pdf_dict[i] = extract_text_from_pdf(pdf_path)
     
-        post_request_data = {
-            "endpoint": "reaction_extraction",
-            "data": {
-                "model_version": model_version,
-                "input_data": extracted_pdf_dict,
-                "kwargs": {
-                    "compress_input": compress_input,
-                    "output_data_format": output_data_format,
-                    "upload_to_external_storage": upload_to_external_storage
-                }
+    if compress_input:  
+        input_data = self._compress_data(extracted_pdf_dict)
+    
+    post_request_data = {
+        "endpoint": "reaction_extraction",
+        "data": {
+            "model_version": model_version,
+            "input_data": extracted_pdf_dict,
+            "kwargs": {
+                "compress_input": compress_input,
+                "output_data_format": output_data_format,
+                "upload_to_external_storage": upload_to_external_storage
             }
         }
+    }
     
-        post_request_data = {"input": post_request_data}
+    post_request_data = {"input": post_request_data}
 
-        output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
+    output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
     
-        returned_data = {
-            'input': post_request_data['input'],
-            'job_id': output_data['id'],
-            'status': output_data['status']
-        }
-        
-        return returned_data
+    returned_data = {
+        'input': post_request_data['input'],
+        'job_id': output_data['id'],
+        'status': output_data['status']
+    }
+    
+    return returned_data
         
     def extract_text_from_pdf(self, pdf_path):
         """
