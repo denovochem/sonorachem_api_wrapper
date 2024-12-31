@@ -7,8 +7,9 @@ import tempfile
 import base64
 from pathlib import Path
 from ast import literal_eval
-from typing import Dict, Any, Optional
+from typing import List, Dict, Any, Optional
 import fitz
+import re
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit import RDLogger                                                                                                                                                               
@@ -16,7 +17,6 @@ RDLogger.DisableLog('rdApp.*')
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-from typing import List, Any
 
 from .utils import randomize_smiles, randomize_reaction_smiles
 
