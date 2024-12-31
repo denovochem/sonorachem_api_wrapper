@@ -466,6 +466,12 @@ class SonoraChemAPIWrapper:
 
     def extract_reaction_jsons_from_pdf_paths(self, pdf_paths):
 
+        if not isinstance(pdf_paths, list) or not all(isinstance(item, str) for item in pdf_paths):
+            raise TypeError("The 'pdf_paths' argument must be a list of strings.")
+
+        if len(pdf_paths) > 100:
+            raise ValueError("The 'pdf_paths' argument must not have more than 100 elements.")
+
         extracted_pdf_dict = {}
         for i, pdf_path in enumerate(pdf_paths):
             extracted_pdf_dict[i] = extract_text_from_pdf(pdf_path)
@@ -639,8 +645,21 @@ class SonoraChemAPIWrapper:
                         'm.p.', 'i.r.', 'm/z', 'purified', 'extracted', 'procedure',
                         'isolated', 'title compound']
         WORDS_TO_CHECK_PATTERN = r'(?i)(?<=\d)(?:' + '|'.join(re.escape(word) for word in WORDS_TO_CHECK) + r')(?=\W|$)'
-    
-        doc = fitz.open(pdf_path)
+
+        if not isinstance(pdf_path, str):
+            raise TypeError("The 'pdf_path' argument must be a string.")
+        
+        if not os.path.exists(pdf_path):
+            raise TypeError("The 'pdf_path' argument must be a valid path.")
+        
+        if not os.path.isfile(pdf_path):
+            raise TypeError("The 'pdf_path' argument must be a file.")
+
+        try:
+            doc = fitz.open(pdf_path)
+        except:
+            raise TypeError("The 'pdf_path' argument must be a pdf.")
+            
         pages_that_may_contain_synthetic_procedures = []
 
         all_blocks = []
