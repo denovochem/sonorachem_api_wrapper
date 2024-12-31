@@ -464,6 +464,36 @@ class SonoraChemAPIWrapper:
     
         return returned_data
 
+    def extract_reaction_jsons_from_pdf_text_dict(self, extracted_pdf_dict):
+        
+        if compress_input:  
+            input_data = self._compress_data(extracted_pdf_dict)
+    
+        post_request_data = {
+            "endpoint": "reaction_extraction_from_pdfs",
+            "data": {
+                "model_version": model_version,
+                "input_data": extracted_pdf_dict,
+                "kwargs": {
+                    "compress_input": compress_input,
+                    "output_data_format": output_data_format,
+                    "upload_to_external_storage": upload_to_external_storage
+                }
+            }
+        }
+    
+        post_request_data = {"input": post_request_data}
+
+        output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
+    
+        returned_data = {
+            'input': post_request_data['input'],
+            'job_id': output_data['id'],
+            'status': output_data['status']
+        }
+        
+        return returned_data
+        
     def extract_text_from_pdf(self, pdf_path):
         """
         Extracts text from a PDF document, focusing on pages that are most likely to have synthetic content.
