@@ -464,13 +464,18 @@ class SonoraChemAPIWrapper:
     
         return returned_data
 
-    def extract_reaction_jsons_from_pdf_text_dict(self, extracted_pdf_dict):
+    def extract_reaction_jsons_from_pdf_paths(self, pdf_paths):
+
+        extracted_pdf_dict = {}
+        for i, pdf_path in enumerate(pdf_paths):
+            extracted_pdf_dict[i] = extract_text_from_pdf(pdf_path)
+            
         
         if compress_input:  
             input_data = self._compress_data(extracted_pdf_dict)
     
         post_request_data = {
-            "endpoint": "reaction_extraction_from_pdfs",
+            "endpoint": "reaction_extraction",
             "data": {
                 "model_version": model_version,
                 "input_data": extracted_pdf_dict,
