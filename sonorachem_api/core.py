@@ -923,7 +923,7 @@ class SonoraChemAPIWrapper:
             content = text_file.read().decode('utf-8')
         return ''.join(content.splitlines())
 
-    def _compress_data(input_data):
+    def _compress_data(self, input_data):
         """
         Compresses input data using ZIP compression and encodes it in base64.
     
@@ -951,7 +951,7 @@ class SonoraChemAPIWrapper:
         finally:
             memory_file.close()
 
-    def _decompress_data(encoded_zip: str) -> List[Any]:
+    def _decompress_data(self, encoded_zip: str) -> List[Any]:
         """
         Decompresses a base64 encoded ZIP string back into its original data.
     
