@@ -183,7 +183,7 @@ class SonoraChemAPIWrapper:
     
         return output_data
 
-    def process_and_validate_image(self, image_input):
+    def _process_and_validate_image(self, image_input):
         """
         Convert various image inputs to a 3-channel numpy array with max size 1024x1024.
         
@@ -234,7 +234,7 @@ class SonoraChemAPIWrapper:
         
         return image_array
 
-    def is_valid_smiles(self, smiles):
+    def _is_valid_smiles(self, smiles):
         """
         Sanitizes and checks if the input is a valid SMILES string, potentially with one or more fragments.
         Removes atom mapping and isotopes if present and issues a warning.
@@ -268,7 +268,7 @@ class SonoraChemAPIWrapper:
             (f"Error: {e}")
             return False
 
-    def is_valid_reaction_smiles(self, reaction_smiles):
+    def _is_valid_reaction_smiles(self, reaction_smiles):
         """
         Sanitizes and checks if the input is a valid reaction SMILES.
         Removes atom mapping and isotopes if present and issues a warning.
@@ -367,13 +367,13 @@ class SonoraChemAPIWrapper:
         
             if input_data_type == 'smiles':
                 for i, smiles in enumerate(input_data):
-                    valid_smiles = self.is_valid_smiles(smiles)
+                    valid_smiles = self._is_valid_smiles(smiles)
                     if not valid_smiles:
                         raise ValueError(f"The SMILES string #{i}, '{smiles}' is not valid.")
                         
             elif input_data_type == 'rxn_smiles':
                 for i, rxn_smiles in enumerate(input_data):
-                    valid_rxn_smiles = self.is_valid_reaction_smiles(rxn_smiles)
+                    valid_rxn_smiles = self._is_valid_reaction_smiles(rxn_smiles)
                     if not valid_rxn_smiles:
                         raise ValueError(f"The reaction SMILES string #{i}, '{rxn_smiles}' is not valid.")
     
@@ -383,12 +383,12 @@ class SonoraChemAPIWrapper:
                     raise TypeError("The 'input_data' argument must be a string.")
     
             if input_data_type == 'smiles':
-                valid_smiles = self.is_valid_smiles(input_data)
+                valid_smiles = self._is_valid_smiles(input_data)
                 if not valid_smiles:
                     raise ValueError("The 'input_data' argument is not a valid SMILES string.")
                         
             elif input_data_type == 'rxn_smiles':
-                valid_rxn_smiles = self.is_valid_reaction_smiles(input_data)
+                valid_rxn_smiles = self._is_valid_reaction_smiles(input_data)
                 if not valid_rxn_smiles:
                     raise ValueError("The 'input_data' argument is not a valid reaction SMILES string.")
     
@@ -420,14 +420,13 @@ class SonoraChemAPIWrapper:
         if top_k <= 0 or top_k > 128:
             raise ValueError("The 'top_k' argument must be greater than 0 and less than or equal to 128.")
                 
-    def _predict(self, endpoint, input_data, input_data_type='smiles', model_version='latest', kwargs={}):
+    def _predict(self, endpoint, input_data, model_version='latest', kwargs={}):
         """
         Parent function to make a prediction.
 
         Args:
             endpoint (str): The endpoint to use for the prediction.
             input_data (str): input data.
-            input_data_type (str, optional): The input data type used for input validation. 
                 Must be one of 'smiles' or 'rxn_smiles'. Defaults to 'smiles'.
             model_version (str, optional): The version of the model to use. Defaults to 'latest'.
             kwargs (dict, optional): Arguments for predictions.
@@ -439,8 +438,6 @@ class SonoraChemAPIWrapper:
             ValueError: 
               - If arguments cannot be validated by _verify_kwargs.
         """
-
-        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
         
         post_request_data = {
             "endpoint": endpoint,
@@ -465,14 +462,13 @@ class SonoraChemAPIWrapper:
     
         return returned_data
 
-    def _batch_predict(self, endpoint, input_data,  input_data_type='smiles', model_version='latest', kwargs={}, batch_size=64):
+    def _batch_predict(self, endpoint, input_data, model_version='latest', kwargs={}, batch_size=64):
         """
         Parent function to make batch predictions.
 
         Args:
             endpoint (str): The endpoint to use for the prediction.
             input_data (list of str): A list of SMILES strings.
-            input_data_type (str, optional): The input data type used for input validation. 
                 Must be one of 'smiles' or 'rxn_smiles'. Defaults to 'smiles'.
             model_version (str, optional): The version of the model to use. Defaults to 'latest'.
             kwargs (dict, optional): Arguments for predictions.
@@ -485,10 +481,6 @@ class SonoraChemAPIWrapper:
             ValueError: 
               - If arguments cannot be validated by _verify_kwargs.
         """
-
-        kwargs["batch_size"] = batch_size
-
-        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=True)
         
         post_request_data = {
             "endpoint": endpoint,
@@ -517,91 +509,133 @@ class SonoraChemAPIWrapper:
         """
         Child function to predict retrosynthetic procedures for a given SMILES string using a template-free approach.
         """
-        return self._predict("procedures_retro_template_free", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        input_data_type = 'smiles'
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
+    
+        return self._predict("procedures_retro_template_free", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def batch_predict_procedures_retro_template_free(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict retrosynthetic procedures for SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_procedures_retro_template_free", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        input_data_type = 'smiles'
+        kwargs["batch_size"] = batch_size
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=True)
+        
+        return self._batch_predict("batch_procedures_retro_template_free", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict purification procedures for a given reaction SMILES string.
         """
-        return self._predict("purification_protocols", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        input_data_type = 'rxn_smiles'
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
+        
+        return self._predict("purification_protocols", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def batch_predict_purification_protocols(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_purification_protocols", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        input_data_type = 'rxn_smiles'
+        kwargs["batch_size"] = batch_size
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=True)
+        
+        return self._batch_predict("batch_purification_protocols", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict a product given a reactant SMILES string using a template-free approach.
         """
-        return self._predict("forward_reaction", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        input_data_type = 'smiles'
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
+        
+        return self._predict("forward_reaction", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def batch_predict_forward_reaction(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict products given reactant SMILES strings using a template-free approach.
         """
-        return self._batch_predict("batch_forward_reaction", input_data, input_data_type='smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        input_data_type = 'smiles'
+        kwargs["batch_size"] = batch_size
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=True)
+        
+        return self._batch_predict("batch_forward_reaction", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict retrosynthetic procedures for a given reactants and products reaction SMILES string.
         """
-        return self._predict("procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        input_data_type = 'rxn_smiles'
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
+        
+        return self._predict("procedures_given_reactants_products", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def batch_predict_procedures_given_reactants_products(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
-        return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        input_data_type = 'rxn_smiles'
+        kwargs["batch_size"] = batch_size
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=True)
+        
+        return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_molecular_diagram_given_image(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
         """
         Child function to predict molecule containing diagram given an image.
         Provide a path to an image file, a numpy image array, or a PIL Image.
         """
-        input_data = process_and_validate_image(input_data)
+        input_data_type = 'image'
+        input_data = self._process_and_validate_image(input_data)
         
-        return self._predict("molecular_diagram_given_image", input_data, input_data_type='image', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        return self._predict("molecular_diagram_given_image", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def batch_predict_molecular_diagram_given_image(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
         """
         Child function to batch predict molecule containing diagram given an image.
         Provide a list of paths to image files, a list of numpy image arrays, or a list of PIL Images.
         """
-        input_data = [process_and_validate_image(ele) for ele in input_data]
+        input_data_type = 'image'
+        input_data = [self._process_and_validate_image(ele) for ele in input_data]
         
-        return self._batch_predict("batch_molecular_diagram_given_image", input_data, input_data_type='image', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+        return self._batch_predict("batch_molecular_diagram_given_image", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=16, rerank_by_reactants=True, use_saguarochem=True, use_custom_data=False):
         """
         Child function to predict top k most likely reactants from templates given a product.
         """
-        return self._predict("top_k_retro_templated", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k, 'rerank': rerank_by_reactants, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
+        input_data_type = 'smiles'
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
+        
+        return self._predict("top_k_retro_templated", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'top_k': top_k, 'rerank': rerank_by_reactants, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
     def retrieve_top_k_similar_reactions_rxn_smiles(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
         """
         Child function to retrieve top k most similar reactions given a reaction SMILES.
         """
-        return self._predict("top_k_similar_reactions_rxn_smiles", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
+        input_data_type = 'rxn_smiles'
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
+        
+        return self._predict("top_k_similar_reactions_rxn_smiles", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
     def retrieve_top_k_similar_reactions_reactants(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
         """
         Child function to retrieve top k most similar reactions given reactant SMILES.
         """
-        return self._predict("top_k_similar_reactions_reactants", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
+        input_data_type = 'smiles'
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
+        
+        return self._predict("top_k_similar_reactions_reactants", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
     def retrieve_top_k_similar_reactions_products(self, input_data, model_version='latest', top_k=16, use_saguarochem=True, use_custom_data=False):
         """
         Child function to retrieve top k most similar reactions given a product SMILES.
         """
-        return self._predict("top_k_similar_reactions_products", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
+        input_data_type = 'smiles'
+        self._verify_kwargs(input_data, input_data_type, model_version, kwargs, batched=False)
+        
+        return self._predict("top_k_similar_reactions_products", input_data, input_data_type=input_data_type, model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
     def extract_reaction_procedure_jsons_from_text(self, input_data, input_metadata=None, model_version='latest', compress_input=True, output_data_format='binary', upload_to_external_storage=True):
         """
