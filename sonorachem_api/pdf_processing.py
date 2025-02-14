@@ -4,28 +4,19 @@ import numpy as np
 import fitz
 from PIL import Image
 
-def extract_text_image_data_from_pdf_paths(pdf_paths, pdf_metadata=None):
+def extract_text_image_data_from_pdf_paths(pdf_paths):
     """
     Extracts text and image data from PDF files.
 
     Args:
         pdf_paths (list): A list of strings containing file paths to PDF documents.
-        pdf_metadata (list, optional): A list of dicts with metadata for the corresponding pdfs.
-        compress_input (bool, optional): Whether to compress the input data. Defaults to False.
-        model_version (str, optional): Version of the model to use. Defaults to "latest".
-        output_data_format (str, optional): Format of the output data. Defaults to "default".
-        upload_to_external_storage (bool, optional): Whether to upload results to external storage. 
-            Defaults to False.
 
     Returns:
-        dict: A dictionary containing:
-            - input: The original post request data
-            - job_id: The ID of the processing job
-            - status: The current status of the job
+        dict: 
 
     Raises:
-        TypeError: If pdf_paths is not a list of strings.
-        ValueError: If pdf_paths contains more than 100 elements.
+        TypeError: 
+        ValueError: 
     """
     
     def extract_text_from_pdf(pdf_path):
@@ -582,22 +573,6 @@ def extract_text_image_data_from_pdf_paths(pdf_paths, pdf_metadata=None):
     
         doc.close()
         return pages_with_synthetic_text, all_images
-    
-    
-    if not isinstance(pdf_paths, list) or not all(isinstance(item, str) for item in pdf_paths):
-        raise TypeError("The 'pdf_paths' argument must be a list of strings.")
-        
-    if len(pdf_paths) > 100:
-        raise ValueError("The 'pdf_paths' argument must not have more than 100 elements.")
-        
-    if pdf_metadata is None:
-        pdf_metadata = [{} for i in range(len(pdf_paths))]
-        
-    if not isinstance(pdf_metadata, list) or not all(isinstance(item, dict) for item in pdf_metadata):
-        raise TypeError("The 'pdf_metadata' argument must be a list of dicts.")
-        
-    if len(pdf_paths) != len(pdf_metadata):
-        raise ValueError("The 'pdf_metadata' argument must be the same length as the pdf_paths argument.")
 
     extracted_pdf_dict = {}
     for i, pdf_path in enumerate(pdf_paths):
