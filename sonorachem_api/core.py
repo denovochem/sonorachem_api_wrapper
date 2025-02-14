@@ -13,6 +13,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 from .utils import randomize_smiles, randomize_reaction_smiles
+from .pdf_processing import extract_reaction_jsons_from_pdf_paths
+from .compression import process_zip_file, process_text_file, compress_data, decompress_data
 
 class SonoraChemAPIWrapper:
     """
