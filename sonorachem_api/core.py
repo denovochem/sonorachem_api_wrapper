@@ -183,6 +183,57 @@ class SonoraChemAPIWrapper:
     
         return output_data
 
+    def process_and_validate_image(self, image_input):
+        """
+        Convert various image inputs to a 3-channel numpy array with max size 1024x1024.
+        
+        Args:
+            image_input: Can be a file path (str), numpy array, or PIL Image
+            max_size: Maximum size for the larger dimension (default: 1024)
+        
+        Returns:
+            numpy array with shape (height, width, 3) and dtype uint8
+        """
+        
+        if isinstance(image_input, str):
+            if not os.path.exists(image_input):
+                raise ValueError(f"File not found: {image_input}")
+            try:
+                image = Image.open(image_input)
+            except Exception as e:
+                raise ValueError(f"Error opening image file: {e}")
+        
+        elif isinstance(image_input, np.ndarray):
+            if image_input.dtype != np.uint8:
+                # Convert to uint8 if necessary
+                image_input = (image_input * 255).astype(np.uint8)
+            image = Image.fromarray(image_input)
+        
+        elif isinstance(image_input, Image.Image):
+            image = image_input
+        
+        else:
+            raise ValueError("Input must be a file path, numpy array, or PIL Image")
+        
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        width, height = image.size
+        if width > max_size or height > max_size:
+            scale = max_size / max(width, height)
+            new_width = int(width * scale)
+            new_height = int(height * scale)
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        image_array = np.array(image)
+        
+        if len(image_array.shape) == 2:  
+            image_array = np.stack([image_array] * 3, axis=-1)
+        elif image_array.shape[2] == 4:
+            image_array = image_array[:, :, :3]
+        
+        return image_array
+
     def is_valid_smiles(self, smiles):
         """
         Sanitizes and checks if the input is a valid SMILES string, potentially with one or more fragments.
@@ -301,12 +352,13 @@ class SonoraChemAPIWrapper:
         top_k = kwargs.get('top_k', 16)
         batch_size = kwargs.get('batch_size', 16)
 
-        if input_data_type not in ['smiles', 'rxn_smiles']:
-            raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles'.")
+        if input_data_type not in ['smiles', 'rxn_smiles', 'image']:
+            raise ValueError("Invalid 'input_data_type'. Must be 'smiles', 'rxn_smiles', or 'image'.")
     
         if batched:
-            if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
-                raise TypeError("The 'input_data' argument must be a list of strings.")
+            if input_data_type in ['smiles', 'rxn_smiles']:
+                if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
+                    raise TypeError("The 'input_data' argument must be a list of strings.")
             
             if not isinstance(batch_size, int):
                 raise TypeError("The 'batch_size' argument must be an integer.")
@@ -314,20 +366,21 @@ class SonoraChemAPIWrapper:
                 raise ValueError("The 'batch_size' argument must be greater than 0 and less than or equal to 256.")
         
             if input_data_type == 'smiles':
-                for smiles in input_data:
+                for i, smiles in enumerate(input_data):
                     valid_smiles = self.is_valid_smiles(smiles)
                     if not valid_smiles:
-                        raise ValueError(f"The SMILES string '{smiles}' is not valid.")
+                        raise ValueError(f"The SMILES string #{i}, '{smiles}' is not valid.")
                         
             elif input_data_type == 'rxn_smiles':
-                for rxn_smiles in input_data:
+                for i, rxn_smiles in enumerate(input_data):
                     valid_rxn_smiles = self.is_valid_reaction_smiles(rxn_smiles)
                     if not valid_rxn_smiles:
-                        raise ValueError(f"The reaction SMILES string '{rxn_smiles}' is not valid.")
+                        raise ValueError(f"The reaction SMILES string #{i}, '{rxn_smiles}' is not valid.")
     
         else:  
-            if not isinstance(input_data, str):
-                raise TypeError("The 'input_data' argument must be a string.")
+            if input_data_type in ['smiles', 'rxn_smiles']:
+                if not isinstance(input_data, str):
+                    raise TypeError("The 'input_data' argument must be a string.")
     
             if input_data_type == 'smiles':
                 valid_smiles = self.is_valid_smiles(input_data)
@@ -507,6 +560,24 @@ class SonoraChemAPIWrapper:
         Child function to batch predict purification procedures for reaction SMILES strings.
         """
         return self._batch_predict("batch_procedures_given_reactants_products", input_data, input_data_type='rxn_smiles', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+
+    def predict_molecular_diagram_given_image(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3):
+        """
+        Child function to predict molecule containing diagram given an image.
+        Provide a path to an image file, a numpy image array, or a PIL Image.
+        """
+        input_data = process_and_validate_image(input_data)
+        
+        return self._predict("molecular_diagram_given_image", input_data, input_data_type='image', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
+
+    def batch_predict_molecular_diagram_given_image(self, input_data, model_version='latest', sampling_method='greedy', seq_length=256, beam_size=5, temperature=0.3, batch_size=64):
+        """
+        Child function to batch predict molecule containing diagram given an image.
+        Provide a list of paths to image files, a list of numpy image arrays, or a list of PIL Images.
+        """
+        input_data = [process_and_validate_image(ele) for ele in input_data]
+        
+        return self._batch_predict("batch_molecular_diagram_given_image", input_data, input_data_type='image', model_version=model_version, kwargs={'sampling_method': sampling_method, 'seq_length': seq_length, 'beam_size': beam_size, 'temperature': temperature})
 
     def predict_top_k_retro_templated(self, input_data, model_version='latest', top_k=16, rerank_by_reactants=True, use_saguarochem=True, use_custom_data=False):
         """
