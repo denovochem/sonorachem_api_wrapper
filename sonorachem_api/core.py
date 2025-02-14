@@ -532,7 +532,7 @@ class SonoraChemAPIWrapper:
         """
         return self._predict("top_k_similar_reactions_products", input_data, input_data_type='smiles', model_version=model_version, kwargs={'top_k': top_k, 'use_saguarochem': use_saguarochem, 'use_custom_data': use_custom_data})
 
-    def extract_reaction_procedure_jsons_from_text(self, input_data, model_version='latest', compress_input=True, output_data_format='binary', upload_to_external_storage=True):
+    def extract_reaction_procedure_jsons_from_text(self, input_data, input_metadata=None, model_version='latest', compress_input=True, output_data_format='binary', upload_to_external_storage=True):
         """
         Extracts reaction procedure JSONs from a list of text passages.
     
@@ -541,6 +541,10 @@ class SonoraChemAPIWrapper:
         and sends a POST request to a specified endpoint for processing.
     
         Parameters:
+            input_data : list of str
+                A list of text passages from which to extract reaction procedures.
+                Each passage should be a string.
+
             input_data : list of str
                 A list of text passages from which to extract reaction procedures.
                 Each passage should be a string.
@@ -583,6 +587,15 @@ class SonoraChemAPIWrapper:
         for datum in input_data:
             if len(datum) > 8192:
                 raise ValueError("Passages in the 'input_data' argument must not be longer than 8192 characters.") 
+        
+        if input_metadata is None:
+            input_metadata = [{} for i in range(len(input_data))]
+            
+        if not isinstance(input_metadata, list) or not all(isinstance(item, dict) for item in input_metadata):
+            raise TypeError("The 'input_metadata' argument must be a list of dicts.")
+            
+        if len(input_data) != len(input_metadata):
+            raise ValueError("The 'input_metadata' argument must be the same length as the input_data argument.")
     
         if not isinstance(model_version, str):
             raise TypeError("The 'model_version' argument must be a string.")
@@ -591,10 +604,118 @@ class SonoraChemAPIWrapper:
             input_data = self._compress_data(input_data)
     
         post_request_data = {
-            "endpoint": "reaction_extraction",
+            "endpoint": "reaction_extraction_from_text",
             "data": {
                 "model_version": model_version,
-                "input_data": input_data,
+                "input_data": [input_data, input_metadata],
+                "kwargs": {
+                    "compress_input": compress_input,
+                    "output_data_format": output_data_format,
+                    "upload_to_external_storage": upload_to_external_storage
+                }
+            }
+        }
+    
+        post_request_data = {"input": post_request_data}
+
+        output_data = self._send_post_request(self._base_url, self._headers, post_request_data)
+    
+        returned_data = {
+            'input': post_request_data['input'],
+            'job_id': output_data['id'],
+            'status': output_data['status']
+        }
+        
+        return returned_data
+
+    def extract_reaction_procedure_jsons_from_pdfs(self, input_data, input_metadata=None, model_version='latest', compress_input=True, output_data_format='binary', upload_to_external_storage=True):
+        """
+        Extracts reaction procedure JSONs from pdfs.
+    
+        This function processes a list of pdf paths to extract reaction procedures,
+        which are then returned as JSON objects. The function validates the input data
+        and sends a POST request to a specified endpoint for processing.
+    
+        Parameters:
+            input_data : list of str
+                A list of strings containing file paths to PDF documents.
+
+            input_metadata : list of dict
+                A list of dicts that contain metadata corresponding to the provided pdf paths.
+        
+            model_version : str, optional
+                The version of the model to use for extraction. Defaults to 'latest'.
+
+            compress_input: bool, optional
+                Whether to compress the input_data before sending post request. Defaults to True. 
+
+            output_data_format: str, optional
+                Format to return processed data. Must be one of 'raw_output' or 'binary'. Defaults
+                to 'binary'.
+
+            upload_to_external_storage: bool, optional
+                Whether to upload the output data to external storage. Defaults to True. 
+    
+        Returns:
+            dict
+                A dictionary containing the following keys:
+                - 'input': The input data sent for processing.
+                - 'output': The output data received from the processing endpoint.
+                - 'status': The status of the processing request.
+                - 'execution_time': The time taken to process the request in seconds.
+    
+        Raises:
+            TypeError
+                If 'input_data' is not a list of strings or if 'model_version' is not a string.
+            ValueError
+                If 'input_data' contains more than 300 passages or if any passage is longer than 8192 characters.
+                If 'input_data_type' is not 'smiles' or 'rxn_smiles'.
+        """
+    
+        if not isinstance(input_data, list) or not all(isinstance(item, str) for item in input_data):
+            raise TypeError("The 'input_data' argument must be a list of strings.")
+    
+        if len(input_data) > 300:
+            raise ValueError("The 'input_data' argument must not contain more than 10 pdf paths.")
+        
+        for path in input_data:
+            if not os.path.exists(path):
+                raise ValueError(f"File does not exist: {path}")
+                
+            if not os.path.isfile(path):
+                raise ValueError(f"Path is not a file: {path}")
+                
+            if not path.lower().endswith('.pdf'):
+                raise ValueError(f"File is not a PDF: {path}")
+                
+            try:
+                doc = fitz.open(path)
+                doc.close()
+            except Exception as e:
+                raise ValueError(f"Failed to open PDF with PyMuPDF: {path}\nError: {str(e)}")
+
+        if input_metadata is None:
+            input_metadata = [{} for i in range(len(input_data))]
+            
+        if not isinstance(input_metadata, list) or not all(isinstance(item, dict) for item in input_metadata):
+            raise TypeError("The 'input_metadata' argument must be a list of dicts.")
+            
+        if len(input_data) != len(input_metadata):
+            raise ValueError("The 'input_metadata' argument must be the same length as the input_data argument.")
+    
+        if not isinstance(model_version, str):
+            raise TypeError("The 'model_version' argument must be a string.")
+
+        input_data = extract_text_image_data_from_pdf_paths(input_data)
+
+        if compress_input:  
+            input_data = self._compress_data(input_data)
+    
+        post_request_data = {
+            "endpoint": "reaction_extraction_from_pdf",
+            "data": {
+                "model_version": model_version,
+                "input_data": [input_data, input_metadata],
                 "kwargs": {
                     "compress_input": compress_input,
                     "output_data_format": output_data_format,
