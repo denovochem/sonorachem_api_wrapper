@@ -391,8 +391,8 @@ def extract_reaction_jsons_from_pdf_paths(pdf_paths, pdf_metadata=None, compress
                 image_index += 1
 
             returned_data = filter_common_bboxes(returned_data, x=3, y=int(np.ceil(len(doc)/2)))
-            # returned_data = filter_bboxes_aspect_ratio(returned_data)
-            # returned_data = filter_bboxes_size(returned_data)
+            returned_data = filter_bboxes_aspect_ratio(returned_data, max_ratio=5) 
+            returned_data = filter_bboxes_size(returned_data, (page.rect.width, page.rect.height), max_percentage=0.8) 
 
             return returned_data, image_index
 
@@ -415,6 +415,60 @@ def extract_reaction_jsons_from_pdf_paths(pdf_paths, pdf_metadata=None, compress
             y1_diff = abs(bbox1[3] - bbox2[3]) / ((bbox1[3] + bbox2[3]) / 2) * 100
 
             return x0_diff <= x and y0_diff <= x and x1_diff <= x and y1_diff <= x
+
+        def filter_bboxes_aspect_ratio(returned_data, max_ratio=3):
+            """
+            Filter out bounding boxes with extreme aspect ratios.
+        
+            Args:
+                returned_data (list): List of bounding box data.
+                max_ratio (float): Maximum allowed aspect ratio (width:height or height:width).
+        
+            Returns:
+                list: Filtered list of bounding box data.
+            """
+            filtered_data = []
+            
+            for item in returned_data:
+                bbox = item['bbox']
+                width = bbox[2] - bbox[0]
+                height = bbox[3] - bbox[1]
+                
+                aspect_ratio = width / height if height != 0 else float('inf')
+                inverse_aspect_ratio = height / width if width != 0 else float('inf')
+                
+                if aspect_ratio <= max_ratio and inverse_aspect_ratio <= max_ratio:
+                    filtered_data.append(item)
+                    
+            return filtered_data
+        
+        def filter_bboxes_size(returned_data, page_size, max_percentage=0.5):
+            """
+            Filter out bounding boxes that are too large relative to the page size.
+        
+            Args:
+                returned_data (list): List of bounding box data.
+                page_size (tuple): Tuple of (page_width, page_height).
+                max_percentage (float): Maximum allowed size as a percentage of page area (0.0 to 1.0).
+        
+            Returns:
+                list: Filtered list of bounding box data.
+            """
+            filtered_data = []
+            page_area = page_size[0] * page_size[1]
+            
+            for item in returned_data:
+                bbox = item['bbox']
+                bbox_width = bbox[2] - bbox[0]
+                bbox_height = bbox[3] - bbox[1]
+                bbox_area = bbox_width * bbox_height
+                
+                area_percentage = bbox_area / page_area
+                
+                if area_percentage <= max_percentage:
+                    filtered_data.append(item)
+                    
+            return filtered_data
 
         def filter_common_bboxes(returned_data, x, y):
             """
