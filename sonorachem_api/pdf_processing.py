@@ -4,11 +4,9 @@ import numpy as np
 import fitz
 from PIL import Image
 
-def extract_reaction_jsons_from_pdf_paths(pdf_paths, pdf_metadata=None, compress_input=False, 
-                                        model_version="latest", output_data_format="default",
-                                        upload_to_external_storage=False):
+def extract_text_image_data_from_pdf_paths(pdf_paths, pdf_metadata=None):
     """
-    Extracts reaction information from PDF files and converts them to JSON format.
+    Extracts text and image data from PDF files.
 
     Args:
         pdf_paths (list): A list of strings containing file paths to PDF documents.
