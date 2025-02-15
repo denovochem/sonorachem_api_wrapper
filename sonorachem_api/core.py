@@ -183,7 +183,7 @@ class SonoraChemAPIWrapper:
     
         return output_data
 
-    def _process_and_validate_image(self, image_input):
+    def _process_and_validate_image(self, image_input, max_size=1024):
         """
         Convert various image inputs to a 3-channel numpy array with max size 1024x1024.
         
