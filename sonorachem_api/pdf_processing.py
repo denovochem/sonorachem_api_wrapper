@@ -4,13 +4,14 @@ import numpy as np
 import fitz
 from PIL import Image
 
-def extract_text_image_data_from_pdf_paths(pdf_paths):
+def extract_text_image_data_from_pdf_paths(pdf_paths, extract_images=True):
     """
     Extracts text and image data from PDF files.
 
     Args:
         pdf_paths (list): A list of strings containing file paths to PDF documents.
-
+        extract_images (bool optional): Whether to extract images from PDF documents.
+        
     Returns:
         dict: 
 
@@ -529,9 +530,11 @@ def extract_text_image_data_from_pdf_paths(pdf_paths):
         image_index = 0
         for page_num in range(len(doc)):
             page = doc[page_num]
-            
-            image_bboxes, image_index = get_drawing_bboxes(page, page_num, image_index)
-            all_images.extend(image_bboxes)
+
+            if extract_images:
+                image_bboxes, image_index = get_drawing_bboxes(page, page_num, image_index)
+                all_images.extend(image_bboxes)
+                
             blocks = page.get_text("blocks")
 
             elements = []
@@ -572,7 +575,7 @@ def extract_text_image_data_from_pdf_paths(pdf_paths):
                 pages_with_synthetic_text[page_num] = synthetic_text
     
         doc.close()
-        return pages_with_synthetic_text, all_images
+        return [pages_with_synthetic_text, all_images]
 
     extracted_pdf_dict = {}
     for i, pdf_path in enumerate(pdf_paths):
